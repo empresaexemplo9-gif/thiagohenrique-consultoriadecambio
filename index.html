@@ -10,7 +10,7 @@
 <header class="top">
   <div class="brand"><strong>Painel Financeiro</strong><span>Mercado · Câmbio · Consultoria</span></div>
   <nav id="nav">
-    <a href="#home" class="on">Início</a><a href="#investimentos">Investimentos</a><a href="#cambio">Câmbio</a><a href="#previsoes">Previsões</a><a href="#consultoria">Consultoria</a>
+    <a href="#home" class="on">Início</a><a href="#investimentos">Investimentos</a><a href="#cambio">Câmbio</a><a href="#previsoes">Previsões</a><a href="#seguros">Seguros</a><a href="#consultoria">Consultoria</a>
   </nav>
   <div class="status"><span id="dot" class="dot"></span><span id="upd">carregando…</span> <button id="refresh">Atualizar</button></div>
 </header>
@@ -96,6 +96,41 @@
   </table></div><p class="note">Previsões são consenso de especialistas, não garantia. Use-as para cenários, não para apostas.</p></div>
 </section>
 
+<!-- SEGUROS -->
+<section id="seguros" class="view">
+  <h1>Seguros: comparativo completo</h1>
+  <p class="lead">Todos os ramos com relevância e demanda no mercado brasileiro, com coberturas, custos, carências, exclusões e seguradoras de referência. Pare o cursor 4 s sobre uma linha para a análise completa.</p>
+  <div class="card"><h2>Tabela comparativa por tipo de seguro</h2>
+    <div class="form"><label>Filtrar por categoria<select id="segCat"><option value="todas">Todas</option><option>Pessoas</option><option>Patrimônio</option><option>Empresas</option></select></label></div>
+    <div class="tw"><table id="segTable"></table></div>
+    <p class="src">Faixas de prêmio: referências de mercado 2025–2026 (SUSEP, ANS, cotações públicas das seguradoras). Valores reais dependem de perfil, região e coberturas.</p></div>
+  <div class="card"><h2>Estimador de custo anual</h2>
+    <div class="form">
+      <label>Capital do seguro de vida (R$)<input id="segValor" type="number" value="500000" step="10000"></label>
+      <label>Valor do imóvel (R$)<input id="segImovel" type="number" value="600000" step="10000"></label>
+      <label>Valor do veículo — FIPE (R$)<input id="segVeiculo" type="number" value="90000" step="1000"></label>
+      <label>Celular/notebook/joias (R$)<input id="segBens" type="number" value="8000" step="500"></label>
+      <label>Patrimônio da empresa (R$)<input id="segEmpresa" type="number" value="400000" step="10000"></label>
+      <label>Saldo de dívidas/financiamentos (R$)<input id="segDivida" type="number" value="200000" step="5000"></label>
+      <label>Idade<input id="segIdade" type="number" value="35" min="0" max="100"></label>
+      <label>Dias de viagem<input id="segDias" type="number" value="10" min="1"></label>
+      <label>Aluguel mensal (R$)<input id="segAluguel" type="number" value="2500"></label>
+      <label>Renda mensal (R$)<input id="segRenda" type="number" value="10000"></label>
+    </div>
+    <div class="tw"><table id="segCalc"></table></div>
+    <p class="note">Estimativa didática para planejamento; não substitui cotação. Referência: gastar 5–10% da renda com seguros essenciais (vida, saúde, auto/residência).</p></div>
+  <div class="card"><h2>Seguradoras — porte, foco e reputação</h2><div class="tw"><table id="segIns"></table></div>
+    <p class="src">*Reputação resumida de Reclame Aqui e índice de reclamações SUSEP — clique para ver a nota atual. Confirme sempre o registro da seguradora e do corretor na SUSEP.</p></div>
+  <h2 style="margin:20px 0 10px">Fichas detalhadas</h2>
+  <div class="cgrid" id="segCards"></div>
+  <div class="card"><h2>Como a consultoria escolhe um seguro</h2><ol>
+    <li><b>Mapear riscos:</b> o que causaria maior dano financeiro (morte/invalidez, saúde, perda de bens, processos).</li>
+    <li><b>Priorizar:</b> riscos de alto impacto e baixa probabilidade são os que mais justificam seguro.</li>
+    <li><b>Dimensionar:</b> capital/limites adequados — subseguro gera indenização proporcional (rateio).</li>
+    <li><b>Cotar 3+ seguradoras</b> via corretor SUSEP e comparar condições gerais, não só preço.</li>
+    <li><b>Revisar anualmente</b> e a cada evento de vida (casamento, filhos, imóvel, empresa).</li></ol></div>
+</section>
+
 <!-- CONSULTORIA -->
 <section id="consultoria" class="view">
   <h1>Consultoria financeira e patrimonial</h1>
@@ -114,5 +149,6 @@
 </main>
 <footer>Dados: Banco Central do Brasil (SGS, Olinda/Focus), AwesomeAPI, Frankfurter (BCE). Atualização automática. Valores de spreads e reputação são referências de mercado sujeitas a mudança.</footer>
 <script src="app.js"></script>
+<script src="seguros.js"></script>
 </body>
 </html>

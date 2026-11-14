@@ -279,7 +279,7 @@ function tipGeneric(tr){const tb=tr.closest('table');const hs=[...tb.querySelect
   return sec(cs[0].textContent,`<p class="note">${tit}</p><table>${cs.map((c,k)=>hs[k]&&k?`<tr><td>${hs[k]}</td><td>${c.innerHTML}</td></tr>`:'').join('')}</table>`)+(src?`<p class="note">${src}</p>`:'');}
 function tipFor(tr){const k=tr.dataset.tip||'';const [t,...r]=k.split(':');const v=r.join(':');
   const val=+$('#sVal').value||0,mes=+$('#sMes').value||0,pr=Math.max(1,+$('#sPrazo').value||1);
-  return (t==='fx'&&tipFx(v))||(t==='inv'&&tipInv(v,pr,val,mes))||(t==='inv12'&&tipInv(v,12,10000,0))||(t==='inst'&&tipInst(v))||(t==='focus'&&tipFocus(v))||(t==='ind'&&tipInd(v))||(t==='cripto'&&tipCripto(v))||tipGeneric(tr);}
+  return (t==='fx'&&tipFx(v))||(t==='inv'&&tipInv(v,pr,val,mes))||(t==='inv12'&&tipInv(v,12,10000,0))||(t==='inst'&&tipInst(v))||(t==='focus'&&tipFocus(v))||(t==='ind'&&tipInd(v))||(t==='cripto'&&tipCripto(v))||(t==='seg'&&typeof tipSeg==='function'&&tipSeg(v))||(t==='segins'&&typeof tipSegIns==='function'&&tipSegIns(v))||tipGeneric(tr);}
 let tipTimer=null,tipRow=null,mx=0,my=0;
 function hideTip(){clearTimeout(tipTimer);tipBox.classList.remove('on');tipRow?.classList.remove('tipping');tipRow=null;}
 function placeTip(){const w=tipBox.offsetWidth,h=tipBox.offsetHeight,W=innerWidth,H=innerHeight;
