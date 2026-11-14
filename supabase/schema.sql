@@ -19,6 +19,11 @@ alter table public.simulations enable row level security;
 create policy "leitura publica fx" on public.fx_snapshots for select using (true);
 create policy "leitura publica ind" on public.indicator_snapshots for select using (true);
 create policy "leitura publica inst" on public.institutions for select using (true);
+-- Gravações pelo backend com a chave publicável, limitadas por validação
+create policy "insere fx" on public.fx_snapshots for insert with check (code ~ '^[A-Z]{3}$' and bid > 0 and ask > 0);
+create policy "insere ind" on public.indicator_snapshots for insert with check (selic between 0 and 100);
+create policy "insere sim" on public.simulations for insert with check (months between 1 and 600 and amount >= 0);
+create policy "le sim" on public.simulations for select using (true);
 insert into public.institutions (name,kind,spread_cash,spread_card,spread_account,safety,reputation,url) values
  ('Wise','Instituição de pagamento (autorizada BCB)',null,0.9,0.9,'Regulada BCB/FCA','Ótima','https://wise.com/br'),
  ('Nomad','Conta global (parceiro banco EUA, FDIC)',null,2.0,2.0,'FDIC até US$250 mil','Ótima','https://www.nomadglobal.com'),
