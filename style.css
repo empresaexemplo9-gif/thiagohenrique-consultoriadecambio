@@ -93,3 +93,20 @@ td.n{font-variant-numeric:tabular-nums}
 
 .brand{display:flex;align-items:center;gap:12px;text-decoration:none}
 .brand img{width:46px;height:46px;border-radius:12px;box-shadow:0 0 0 1px rgba(47,180,255,.55),0 0 16px rgba(47,180,255,.45);flex:none}
+/* ---- Página em largura total, módulos distribuídos em grade ---- */
+main{max-width:none;padding:24px clamp(16px,2.2vw,44px) 40px}
+.grid2{grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr))}
+.cgrid{grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))}
+.kpis{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+@media(min-width:1800px){
+  .view.on,.subview.on{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:28px;align-items:start}
+  .view.on>*,.subview.on>*{grid-column:1/-1;min-width:0}
+  .view.on>.card,.subview.on>.card{height:calc(100% - 28px)}
+  .card:has(#cripto){grid-column:span 8}.card:has(#cripto)+.card{grid-column:span 4}
+  .card:has(#invGuide){grid-column:span 8}.card:has(#invGuide)+.card{grid-column:span 4}
+  #prev-mercado{grid-column:span 7}#prev-cambio{grid-column:span 5}
+  #prev-consultoria{grid-column:span 7}#prev-consultoria+.card{grid-column:span 5}
+  .card:has(#segCalc){grid-column:span 6}.card:has(#segIns){grid-column:span 6}
+  .card:has(#vAtr){grid-column:span 8}.card:has(#vEventos){grid-column:span 4}
+  #tools{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
