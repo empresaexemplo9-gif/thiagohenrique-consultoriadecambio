@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Painel Financeiro Pessoal</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><strong>Painel Financeiro</strong><span>Mercado · Câmbio · Consultoria</span></div>
+  <nav id="nav">
+    <a href="#home" class="on">Início</a><a href="#investimentos">Investimentos</a><a href="#cambio">Câmbio</a><a href="#previsoes">Previsões</a><a href="#consultoria">Consultoria</a>
+  </nav>
+  <div class="status"><span id="dot" class="dot"></span><span id="upd">carregando…</span> <button id="refresh">Atualizar</button></div>
+</header>
+
+<main>
+<!-- HOME -->
+<section id="home" class="view on">
+  <h1>Visão geral do mercado</h1>
+  <p class="lead">Indicadores oficiais (Banco Central do Brasil) e cotações em tempo quase real. Atualização automática a cada 60 s para câmbio e a cada 30 min para indicadores.</p>
+  <div class="kpis" id="kpis"></div>
+  <div class="grid2">
+    <div class="card"><h2>Principais moedas x Real</h2><div class="tw"><table id="homeFx"></table></div><p class="src">Fonte: AwesomeAPI (agrega cotações comerciais B3/mercado interbancário). Valor comercial — não inclui spread nem IOF.</p></div>
+    <div class="card"><h2>Rendimento líquido em 12 meses (R$ 10.000)</h2><div class="tw"><table id="homeInv"></table></div><p class="src">Calculado com Selic/CDI/IPCA vigentes e IR regressivo. Veja detalhes em Investimentos.</p></div>
+  </div>
+  <div class="card"><h2>Como ler este painel</h2>
+    <ul class="how">
+      <li><b>Selic</b>: taxa básica de juros; guia todos os investimentos de renda fixa.</li>
+      <li><b>CDI</b>: taxa entre bancos, quase igual à Selic; CDBs e fundos pagam “% do CDI”.</li>
+      <li><b>IPCA</b>: inflação oficial. Um investimento só enriquece se render <i>acima</i> dele (ganho real).</li>
+      <li><b>Comercial x Turismo</b>: o dólar “comercial” é o de grandes operações; o cidadão paga mais (spread da instituição + IOF).</li>
+    </ul>
+  </div>
+</section>
+
+<!-- INVESTIMENTOS -->
+<section id="investimentos" class="view">
+  <h1>Investimentos: ganhos, riscos e liquidez</h1>
+  <div class="card sim">
+    <h2>Simulador</h2>
+    <div class="form">
+      <label>Valor (R$)<input id="sVal" type="number" value="10000" min="0" step="100"></label>
+      <label>Aporte mensal (R$)<input id="sMes" type="number" value="0" min="0" step="50"></label>
+      <label>Prazo até a retirada (meses)<input id="sPrazo" type="number" value="24" min="1" max="600"></label>
+    </div>
+    <p class="note">O prazo altera o IR (22,5% até 6 meses → 15% acima de 2 anos) e o IOF (resgate antes de 30 dias). Os valores recalculam sozinhos quando o mercado atualiza.</p>
+    <div class="tw"><table id="invTable"></table></div>
+    <p class="src">Premissas: taxas de mercado típicas por produto aplicadas sobre CDI/IPCA/Selic oficiais do BCB; ações e FIIs usam retorno histórico médio estimado e <b>não são garantidos</b>. Taxas reais de cada emissor variam — confirme no seu banco/corretora.</p>
+  </div>
+  <div class="card"><h2>Guia de produtos</h2><div class="tw"><table id="invGuide"></table></div></div>
+  <div class="card"><h2>Tabela regressiva de IR (renda fixa)</h2>
+    <div class="tw"><table><tr><th>Prazo</th><th>Alíquota sobre o lucro</th></tr><tr><td>até 180 dias</td><td>22,5%</td></tr><tr><td>181 a 360 dias</td><td>20%</td></tr><tr><td>361 a 720 dias</td><td>17,5%</td></tr><tr><td>acima de 720 dias</td><td>15%</td></tr></table></div>
+    <p class="src">Fonte: Receita Federal (Lei 11.033/2004). LCI, LCA, CRI, CRA e poupança são isentos para pessoa física. Verifique mudanças legislativas recentes.</p>
+  </div>
+</section>
+
+<!-- CAMBIO -->
+<section id="cambio" class="view">
+  <h1>Câmbio: as 20 moedas mais negociadas</h1>
+  <div class="card">
+    <h2>Conversor com custo efetivo</h2>
+    <div class="form">
+      <label>Moeda<select id="cMoeda"></select></label>
+      <label>Valor desejado (moeda estrangeira)<input id="cQtd" type="number" value="1000" min="0"></label>
+      <label>Operação<select id="cOp"><option value="especie">Comprar papel-moeda</option><option value="cartao">Cartão pré-pago / crédito no exterior</option><option value="conta">Conta global / remessa</option></select></label>
+    </div>
+    <div class="tw"><table id="instTable"></table></div>
+    <p class="src">VET = Valor Efetivo Total (cotação + spread + IOF + tarifas). Spreads são <b>faixas típicas observadas</b> e mudam diariamente; confirme no app/loja antes de fechar. IOF vigente: 1,1% espécie; 3,5% cartões e contas globais (Decreto 12.499/2025); remessas variam por finalidade. Reputação: Reclame Aqui e ranking de reclamações do Banco Central.</p>
+  </div>
+  <div class="card"><h2>Cotações ao vivo</h2><div class="tw"><table id="fxTable"></table></div><p class="src">Fontes: AwesomeAPI (B3/interbancário) · Frankfurter/BCE como contingência · PTAX oficial no site do BCB.</p></div>
+</section>
+
+<!-- PREVISOES -->
+<section id="previsoes" class="view">
+  <h1>Previsões de mercado</h1>
+  <div class="card"><h2>Boletim Focus — Banco Central (mediana do mercado)</h2><div class="tw"><table id="focus"></table></div><p class="src" id="focusSrc">Fonte: Expectativas de Mercado / Boletim Focus — BCB (consulta pública semanal a ~100 instituições).</p></div>
+  <div class="card"><h2>Onde acompanhar previsões confiáveis</h2><div class="tw"><table>
+    <tr><th>Fonte</th><th>O que oferece</th><th>Reputação</th></tr>
+    <tr><td><a href="https://www.bcb.gov.br/publicacoes/focus" target="_blank">Boletim Focus (BCB)</a></td><td>Selic, IPCA, PIB, câmbio — consenso semanal</td><td>Oficial, referência nacional</td></tr>
+    <tr><td><a href="https://www.bcb.gov.br/publicacoes/ri" target="_blank">Relatório de Política Monetária (BCB)</a></td><td>Projeções do próprio Copom</td><td>Oficial</td></tr>
+    <tr><td><a href="https://www.imf.org/en/Publications/WEO" target="_blank">FMI – World Economic Outlook</a></td><td>PIB e inflação global</td><td>Internacional, alta</td></tr>
+    <tr><td><a href="https://www.federalreserve.gov/monetarypolicy.htm" target="_blank">Federal Reserve</a></td><td>Juros dos EUA (move o dólar)</td><td>Oficial EUA</td></tr>
+    <tr><td><a href="https://www.ecb.europa.eu" target="_blank">Banco Central Europeu</a></td><td>Juros/euro</td><td>Oficial UE</td></tr>
+    <tr><td><a href="https://www.itau.com.br/itaubba-pt/analises-economicas/projecoes" target="_blank">Itaú BBA – Macro</a> · <a href="https://www.economiaemdia.com.br" target="_blank">Bradesco – Economia em Dia</a></td><td>Cenários dos maiores bancos</td><td>Top 5 Focus histórico</td></tr>
+  </table></div><p class="note">Previsões são consenso de especialistas, não garantia. Use-as para cenários, não para apostas.</p></div>
+</section>
+
+<!-- CONSULTORIA -->
+<section id="consultoria" class="view">
+  <h1>Consultoria financeira e patrimonial</h1>
+  <div class="card"><h2>Diagnóstico rápido</h2>
+    <div class="form">
+      <label>Renda mensal líquida (R$)<input id="dRenda" type="number" value="8000"></label>
+      <label>Gastos mensais (R$)<input id="dGasto" type="number" value="6000"></label>
+      <label>Reserva atual (R$)<input id="dRes" type="number" value="10000"></label>
+      <label>Dívidas (R$)<input id="dDiv" type="number" value="0"></label>
+    </div>
+    <div id="diag" class="diag"></div>
+  </div>
+  <div class="cgrid" id="consult"></div>
+  <p class="src">Conteúdo educativo, não constitui recomendação individual (Res. CVM 20). Para decisões relevantes consulte um profissional certificado (CFP®, CEA, CGA).</p>
+</section>
+</main>
+<footer>Dados: Banco Central do Brasil (SGS, Olinda/Focus), AwesomeAPI, Frankfurter (BCE). Atualização automática. Valores de spreads e reputação são referências de mercado sujeitas a mudança.</footer>
+<script src="app.js"></script>
+</body>
+</html>
