@@ -10,7 +10,7 @@
 <header class="top">
   <div class="brand"><strong>Painel Financeiro</strong><span>Mercado · Câmbio · Consultoria</span></div>
   <nav id="nav">
-    <a href="#home" class="on">Início</a><a href="#investimentos">Investimentos</a><a href="#cambio">Câmbio</a><a href="#previsoes">Previsões</a><a href="#seguros">Seguros</a><a href="#consultoria">Consultoria</a>
+    <a href="#home" class="on">Início</a><a href="#investimentos">Investimentos</a><a href="#cambio">Câmbio</a><a href="#previsoes">Previsões</a><a href="#viagens">Viagens & Eventos</a><a href="#seguros">Seguros</a><a href="#consultoria">Consultoria</a>
   </nav>
   <div class="status"><span id="dot" class="dot"></span><span id="upd">carregando…</span> <button id="refresh">Atualizar</button></div>
 </header>
@@ -96,6 +96,29 @@
   </table></div><p class="note">Previsões são consenso de especialistas, não garantia. Use-as para cenários, não para apostas.</p></div>
 </section>
 
+<!-- VIAGENS -->
+<section id="viagens" class="view">
+  <h1>Viagens & Eventos</h1>
+  <p class="lead">Atrações turísticas, esportivas e culturais com preços oficiais convertidos ao câmbio do momento, montagem de pacote com hospedagem e mobilidade, e comparativo de fornecedores.</p>
+  <div class="card"><div class="form">
+    <label>Destino<select id="vDest"></select></label>
+    <label>Forma de pagamento<select id="vPag"><option value="cartao">Cartão de crédito (spread ~5% + IOF 3,5%)</option><option value="conta" selected>Conta global (spread ~1,5% + IOF 3,5%)</option><option value="especie">Papel-moeda (spread ~4% + IOF 1,1%)</option></select></label>
+  </div><div class="kpis" id="vInfo"></div></div>
+  <div class="card"><h2 class="hi"><i data-ico="ticket"></i>Atrações, eventos e ingressos</h2><div class="tw"><table id="vAtr"></table></div>
+    <p class="src">Preços: tabelas oficiais das atrações/clubes (2025–2026), sujeitos a preço dinâmico por data. Conversão pelo câmbio comercial ao vivo + spread da forma de pagamento. Marque as atrações para incluir no pacote.</p></div>
+  <div class="card"><h2 class="hi"><i data-ico="calendar"></i>Próximos eventos ao vivo</h2><div id="vEventos"></div></div>
+  <div class="grid2">
+    <div class="card"><h2 class="hi"><i data-ico="suitcase"></i>Monte seu pacote</h2>
+      <div class="form"><label>Dias<input id="vDias" type="number" value="7" min="1" max="60"></label><label>Pessoas<input id="vPes" type="number" value="2" min="1" max="20"></label><label>Hotel<select id="vHotel"><option value="3">3 estrelas</option><option value="4" selected>4 estrelas</option><option value="5">5 estrelas</option></select></label></div>
+      <div class="tw"><table id="vPacote"></table></div></div>
+    <div class="card"><h2 class="hi"><i data-ico="bed"></i>O que um pacote costuma incluir</h2><div id="vInclui"></div></div>
+  </div>
+  <div class="card"><h2>Comparativo de fornecedores</h2>
+    <div class="form"><label>Categoria<select id="vFornCat"><option value="todas">Todas</option><option>Hospedagem</option><option>Pacotes</option><option>Passagens</option><option>Ingressos</option><option>Passeios</option><option>Mobilidade</option></select></label></div>
+    <div class="tw"><table id="vForn"></table></div>
+    <p class="src">Avaliação da consultoria com base em condições comerciais públicas, situação jurídica e reclamações (Reclame Aqui, Procon, consumidor.gov.br). Clique para ver a nota atual.</p></div>
+</section>
+
 <!-- SEGUROS -->
 <section id="seguros" class="view">
   <h1>Seguros: comparativo completo</h1>
@@ -151,5 +174,6 @@
 <script src="icons.js"></script>
 <script src="app.js"></script>
 <script src="seguros.js"></script>
+<script src="viagens.js"></script>
 </body>
 </html>
