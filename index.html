@@ -25,10 +25,10 @@
     <div class="card"><h2>Principais moedas x Real</h2><div class="tw"><table id="homeFx"></table></div><p class="src">Fonte: AwesomeAPI (agrega cotações comerciais B3/mercado interbancário). Valor comercial — não inclui spread nem IOF.</p></div>
     <div class="card"><h2>Rendimento líquido em 12 meses (R$ 10.000)</h2><div class="tw"><table id="homeInv"></table></div><p class="src">Calculado com Selic/CDI/IPCA vigentes e IR regressivo. Veja detalhes em Investimentos.</p></div>
   </div>
-  <div class="grid2">
-    <div class="card"><h2>Selic x IPCA — últimos 24 meses (% a.a.)</h2><div id="chJuros" class="chart"></div><p class="src">Fonte: BCB SGS 4189 (Selic efetiva anualizada) e 13522 (IPCA 12 meses). A distância entre as linhas é o juro real.</p></div>
-    <div class="card"><h2>Criptoativos</h2><div class="tw"><table id="cripto"></table></div><p class="src">Fonte: AwesomeAPI. Volatilidade muito alta; não há garantia nem FGC. Não ultrapasse 1–5% do patrimônio.</p></div>
-  </div>
+  <div class="card"><h2>Juros, inflação e juro real — últimos 24 meses (% a.a.)</h2>
+    <div class="grid2"><div><div id="chJuros" class="chart"></div></div><div class="tw"><table id="indTable"></table></div></div>
+    <p class="src">Fonte: Banco Central do Brasil — SGS 432 (Selic meta), 4189 (Selic efetiva anualizada), 4389 (CDI), 13522 (IPCA 12m), 433 (IPCA mensal), 189 (IGP-M mensal), 226 (TR), 24369 (desemprego PNAD). Juro real = (1+Selic)/(1+IPCA)−1. Atualização a cada 30 min.</p></div>
+  <div class="card"><h2>Criptoativos — top 12 por capitalização (R$)</h2><div id="criptoResumo" class="kpis"></div><div class="tw"><table id="cripto"></table></div><p class="src" id="criptoSrc">Fonte: CoinGecko (agregador de +1.000 corretoras). Volatilidade muito alta; não há garantia nem FGC. Ganho em cripto: isenção até R$ 35 mil/mês em vendas (Lei 14.754/2023 para exterior pode tributar 15%). Recomendação usual: no máximo 1–5% do patrimônio.</p></div>
   <div class="card"><h2>Como ler este painel</h2>
     <ul class="how">
       <li><b>Selic</b>: taxa básica de juros; guia todos os investimentos de renda fixa.</li>

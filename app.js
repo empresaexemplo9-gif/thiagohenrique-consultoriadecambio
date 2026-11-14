@@ -183,10 +183,25 @@ function svgChart(series,{fmt=v=>num(v,2)}={}){ // series: [{nome,cor,pts:[[t,v]
   return `<svg viewBox="0 0 ${W} ${H}" role="img" style="color:var(--ink)">${g}${lines}</svg>${leg}`;
 }
 const br2t=s=>{const [d,m,a]=s.split('/');return +new Date(a,m-1,d);};
-async function loadJuros(){try{
-  const [sel,ipc]=await Promise.all([sgs(4189,24),sgs(13522,24)]);const f=a=>a.map(r=>[br2t(r.data),+r.valor.replace(',','.')]);
-  $('#chJuros').innerHTML=svgChart([{nome:'Selic',cor:'#0b6bcb',pts:f(sel)},{nome:'IPCA 12m',cor:'#d9480f',pts:f(ipc)}]);
-}catch(e){$('#chJuros').innerHTML='<p class="note">BCB indisponível no momento.</p>';}}
+const IND_DEF=[['432','Selic meta','% a.a.','Taxa básica definida pelo Copom. Referência para toda a renda fixa.'],['4389','CDI','% a.a.','Taxa entre bancos; CDBs, LCIs e fundos pagam “% do CDI”.'],['13522','IPCA 12 meses','%','Inflação oficial acumulada; meta do BC 3% (tolerância 1,5–4,5%).'],['433','IPCA do mês','%','Inflação do último mês divulgado.'],['189','IGP-M do mês','%','“Inflação do aluguel”; reajusta contratos de locação.'],['226','TR do mês','%','Compõe a poupança e o FGTS.'],['24369','Desemprego (PNAD)','%','Taxa de desocupação trimestral móvel — IBGE.']];
+async function series(codes,n){
+  if(location.protocol!=='file:'){try{const d=await getJSON(`/api/series?c=${codes.join(',')}&n=${n}`);if(Object.keys(d).length)return d;}catch(e){}}
+  const out={};await Promise.all(codes.map(async c=>{try{out[c]=(await sgs(c,n)).map(r=>({data:r.data,valor:+r.valor.replace(',','.')}));}catch(e){}}));return out;}
+async function loadJuros(){
+  const d=await series(['4189','13522','432','4389','433','189','226','24369'],25);
+  const pts=c=>(d[c]||[]).map(r=>[br2t(r.data),r.valor]);
+  const sel=pts('4189'),ipc=pts('13522');
+  if(!sel.length&&!ipc.length){$('#chJuros').innerHTML='<p class="note">Banco Central indisponível no momento — tentaremos de novo em 30 min.</p>';$('#indTable').innerHTML='';return;}
+  const real=sel.map(([t,v])=>{const i=ipc.find(p=>Math.abs(p[0]-t)<20*864e5);return i?[t,((1+v/100)/(1+i[1]/100)-1)*100]:null;}).filter(Boolean);
+  $('#chJuros').innerHTML=svgChart([{nome:'Selic efetiva',cor:'#0b6bcb',pts:sel},{nome:'IPCA 12m',cor:'#d9480f',pts:ipc},{nome:'Juro real',cor:'#2f9e44',pts:real}]);
+  // atualiza KPIs com dados oficiais, se vierem
+  const last=c=>d[c]?.at(-1)?.valor;
+  if(last('432')!=null){S.ind.selic=last('432');S.ind.cdi=last('4389')??S.ind.cdi;S.ind.ipca12=last('13522')??S.ind.ipca12;S.ind.data=d['432'].at(-1).data;S.live.ind=true;renderKpis();renderInv();}
+  $('#indTable').innerHTML='<tr><th>Indicador</th><th>Atual</th><th>Há 12 meses</th><th>Mudança</th><th>Data</th></tr>'+IND_DEF.map(([c,n,u,txt])=>{const s=d[c];if(!s||!s.length)return '';
+    const cur=s.at(-1),old=s.length>12?s.at(-13):s[0];const dv=cur.valor-old.valor;
+    return `<tr data-tip="ind:${c}"><td><b>${n}</b></td><td class="n">${num(cur.valor,2)}${u}</td><td class="n">${num(old.valor,2)}${u}</td><td class="n ${dv>0?'dn':'up'}">${dv>0?'▲':dv<0?'▼':'='} ${num(Math.abs(dv),2)}</td><td>${cur.data}</td></tr>`;}).join('')+
+    (sel.length&&ipc.length?`<tr data-tip="ind:real"><td><b>Juro real (ex-post)</b></td><td class="n">${pct(real.at(-1)?.[1]??0)}</td><td class="n">${pct(real[0]?.[1]??0)}</td><td class="n">—</td><td>calculado</td></tr>`:'');
+  S.series=d;}
 async function loadHist(){const c=$('#cMoeda').value||'USD',n=$('#hDias').value;$('#hNome').textContent=c;
   try{const d=await getJSON(`https://economia.awesomeapi.com.br/json/daily/${c}-BRL/${n}`);
     const pts=d.map(r=>[r.timestamp*1000,+r.bid]).reverse();const v=pts.map(p=>p[1]);
@@ -201,9 +216,24 @@ async function loadPtax(){const f=d=>`${String(d.getMonth()+1).padStart(2,'0')}-
   try{const d=await getJSON(`https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/CotacaoDolarPeriodo(dataInicial=@i,dataFinalCotacao=@f)?@i='${f(ini)}'&@f='${f(hoje)}'&$format=json&$orderby=dataHoraCotacao%20desc`);
     $('#ptax').innerHTML='<tr><th>Data</th><th>Compra</th><th>Venda</th><th>Spread oficial</th></tr>'+d.value.slice(0,7).map(r=>`<tr><td>${new Date(r.dataHoraCotacao.replace(' ','T')).toLocaleDateString('pt-BR')}</td><td class="n">R$ ${num(r.cotacaoCompra)}</td><td class="n">R$ ${num(r.cotacaoVenda)}</td><td class="n">${pct((r.cotacaoVenda/r.cotacaoCompra-1)*100,3)}</td></tr>`).join('');
   }catch(e){$('#ptax').innerHTML='<tr><td>PTAX indisponível. Consulte <a href="https://www.bcb.gov.br/estabilidadefinanceira/historicocotacoes" target="_blank">bcb.gov.br</a>.</td></tr>';}}
-async function loadCripto(){try{const d=await getJSON('https://economia.awesomeapi.com.br/json/last/BTC-BRL,ETH-BRL,BTC-USD,ETH-USD');
-  $('#cripto').innerHTML='<tr><th>Ativo</th><th>Preço</th><th>Var. 24h</th><th>Mín – Máx</th></tr>'+Object.values(d).map(q=>`<tr><td><b>${q.code}/${q.codein}</b></td><td class="n">${q.codein==='BRL'?brl(+q.bid):'US$ '+num(+q.bid,2)}</td><td class="n ${+q.pctChange>=0?'up':'dn'}">${pct(+q.pctChange)}</td><td class="n">${num(+q.low,0)} – ${num(+q.high,0)}</td></tr>`).join('');
-}catch(e){$('#cripto').innerHTML='<tr><td>Cotações cripto indisponíveis.</td></tr>';}}
+const big=v=>v>=1e12?num(v/1e12,2)+' tri':v>=1e9?num(v/1e9,1)+' bi':v>=1e6?num(v/1e6,1)+' mi':num(v,0);
+const chg=v=>v==null?'—':`<span class="${v>=0?'up':'dn'}">${v>=0?'▲':'▼'} ${pct(Math.abs(v),1)}</span>`;
+function spark(a){if(!a||a.length<2)return '';const mn=Math.min(...a),mx=Math.max(...a),W=90,H=24;const up=a.at(-1)>=a[0];
+  return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"><polyline fill="none" stroke="${up?'var(--up)':'var(--dn)'}" stroke-width="1.5" points="${a.map((v,i)=>(i/(a.length-1)*W).toFixed(1)+','+(H-2-(v-mn)/(mx-mn||1)*(H-4)).toFixed(1)).join(' ')}"/></svg>`;}
+async function loadCripto(){let d=null;
+  if(location.protocol!=='file:'){try{d=await getJSON('/api/crypto');}catch(e){}}
+  if(!d||!d.data.length){try{const q=await getJSON('https://economia.awesomeapi.com.br/json/last/BTC-BRL,ETH-BRL,SOL-BRL,XRP-BRL,LTC-BRL,DOGE-BRL');d={src:'AwesomeAPI',data:Object.values(q).map((x,i)=>({sym:x.code,name:x.name.split('/')[0],rank:i+1,price:+x.bid,high:+x.high,low:+x.low,ch24:+x.pctChange,spark:[]}))};}catch(e){}}
+  if(!d||!d.data.length){$('#cripto').innerHTML='<tr><td>Cotações cripto indisponíveis no momento — nova tentativa em 5 min.</td></tr>';$('#criptoResumo').innerHTML='';return;}
+  S.cripto=d.data;const L=d.data;
+  const tot=L.reduce((a,c)=>a+(c.mcap||0),0),btc=L.find(c=>c.sym==='BTC');const cdi30=(Math.pow(1+S.ind.cdi/100,1/12)-1)*100;
+  const sobe=L.filter(c=>(c.ch24??0)>=0).length;
+  $('#criptoResumo').innerHTML=[['Bitcoin',btc?brl(btc.price):'—',btc?chg(btc.ch24)+' 24h':''],['Dominância BTC',btc&&tot?pct(btc.mcap/tot*100,1):'—','do top 12'],['Capitalização top 12',tot?'R$ '+big(tot):'—','valor de mercado'],['Em alta (24h)',`${sobe}/${L.length}`,sobe>L.length/2?'mercado comprador':'mercado vendedor'],['BTC 30d x CDI 30d',btc?.ch30!=null?pct(btc.ch30,1)+' x '+pct(cdi30,2):'—',btc?.ch30!=null?(btc.ch30>cdi30?'cripto à frente':'renda fixa à frente'):'']]
+    .map(x=>`<div class="kpi"><div class="l">${x[0]}</div><div class="v" style="font-size:18px">${x[1]}</div><div class="s">${x[2]}</div></div>`).join('');
+  const full=L[0].mcap!=null;
+  $('#cripto').innerHTML=`<tr><th>#</th><th>Ativo</th><th>Preço</th>${full?'<th>1h</th>':''}<th>24h</th>${full?'<th>7d</th><th>30d</th><th>1 ano</th><th>Do topo histórico</th><th>Capitalização</th><th>Volume 24h</th><th>7 dias</th>':'<th>Mín – Máx</th>'}</tr>`+
+   L.map(c=>`<tr data-tip="cripto:${c.sym}"><td>${c.rank??''}</td><td><b>${c.sym}</b> <span class="note">${c.name}</span></td><td class="n">${brl(c.price)}</td>${full?`<td class="n">${chg(c.ch1h)}</td>`:''}<td class="n">${chg(c.ch24)}</td>${full?`<td class="n">${chg(c.ch7)}</td><td class="n">${chg(c.ch30)}</td><td class="n">${chg(c.ch1y)}</td><td class="n">${c.athPct!=null?pct(c.athPct,1):'—'}</td><td class="n">R$ ${big(c.mcap)}</td><td class="n">R$ ${big(c.vol)}</td><td>${spark(c.spark)}</td>`:`<td class="n">${brl(c.low)} – ${brl(c.high)}</td>`}</tr>`).join('');
+  $('#criptoSrc').innerHTML=$('#criptoSrc').innerHTML.replace(/^Fonte: [^(.]+/,'Fonte: '+d.src+' ');
+}
 $('#cMoeda').addEventListener('change',loadHist);$('#hDias').addEventListener('change',loadHist);
 loadJuros();loadHist();loadPtax();loadCripto();
 setInterval(()=>{loadCripto();loadPtax();},5*60*1000);setInterval(loadHist,30*60*1000);
@@ -249,7 +279,7 @@ function tipGeneric(tr){const tb=tr.closest('table');const hs=[...tb.querySelect
   return sec(cs[0].textContent,`<p class="note">${tit}</p><table>${cs.map((c,k)=>hs[k]&&k?`<tr><td>${hs[k]}</td><td>${c.innerHTML}</td></tr>`:'').join('')}</table>`)+(src?`<p class="note">${src}</p>`:'');}
 function tipFor(tr){const k=tr.dataset.tip||'';const [t,...r]=k.split(':');const v=r.join(':');
   const val=+$('#sVal').value||0,mes=+$('#sMes').value||0,pr=Math.max(1,+$('#sPrazo').value||1);
-  return (t==='fx'&&tipFx(v))||(t==='inv'&&tipInv(v,pr,val,mes))||(t==='inv12'&&tipInv(v,12,10000,0))||(t==='inst'&&tipInst(v))||(t==='focus'&&tipFocus(v))||tipGeneric(tr);}
+  return (t==='fx'&&tipFx(v))||(t==='inv'&&tipInv(v,pr,val,mes))||(t==='inv12'&&tipInv(v,12,10000,0))||(t==='inst'&&tipInst(v))||(t==='focus'&&tipFocus(v))||(t==='ind'&&tipInd(v))||(t==='cripto'&&tipCripto(v))||tipGeneric(tr);}
 let tipTimer=null,tipRow=null,mx=0,my=0;
 function hideTip(){clearTimeout(tipTimer);tipBox.classList.remove('on');tipRow?.classList.remove('tipping');tipRow=null;}
 function placeTip(){const w=tipBox.offsetWidth,h=tipBox.offsetHeight,W=innerWidth,H=innerHeight;
@@ -265,3 +295,19 @@ document.addEventListener('scroll',hideTip,true);
 // Toque: pressionar e segurar 1 s abre a explicação
 let lp;document.addEventListener('touchstart',e=>{const tr=e.target.closest('main table tr');if(!tr||!tr.querySelector('td'))return;const t=e.touches[0];mx=t.clientX;my=t.clientY;lp=setTimeout(()=>{tipBox.innerHTML=tipFor(tr)+'<p class="note tipclose">Toque fora para fechar.</p>';tipBox.classList.add('on');placeTip();},1000);},{passive:true});
 document.addEventListener('touchend',()=>clearTimeout(lp));document.addEventListener('touchstart',e=>{if(!tipBox.contains(e.target)&&!e.target.closest('main table tr'))hideTip();},{passive:true});
+
+function tipInd(c){const d=S.series||{};
+  if(c==='real'){return sec('Juro real',`<p>Quanto a Selic rende <b>acima da inflação</b>. Acima de 5% a.a. é considerado juro real muito alto — favorece renda fixa e encarece crédito; abaixo de 3% favorece bolsa, imóveis e empreendimentos.</p><p>Hoje: <b>${pct(((1+S.ind.selic/100)/(1+S.ind.ipca12/100)-1)*100)}</b>.</p>`);}
+  const def=IND_DEF.find(x=>x[0]===c);const s=d[c]||[];if(!def||!s.length)return '';const v=s.map(r=>r.valor);
+  const mn=Math.min(...v),mx=Math.max(...v),avg=v.reduce((a,b)=>a+b,0)/v.length;
+  return sec(def[1],`<p>${def[3]}</p>`)+sec('Últimos '+s.length+' registros',`<table><tr><td>Atual</td><td class="n">${num(v.at(-1),2)}${def[2]}</td></tr><tr><td>Mínimo</td><td class="n">${num(mn,2)}</td></tr><tr><td>Máximo</td><td class="n">${num(mx,2)}</td></tr><tr><td>Média</td><td class="n">${num(avg,2)}</td></tr></table>${spark(v)}`)+
+   sec('Leitura prática',c==='432'||c==='4389'?`<p>Com ${def[1]} em ${pct(v.at(-1))}, R$ 10.000 em CDB 100% CDI por 1 ano rendem ~${brl(10000*v.at(-1)/100*0.825)} líquidos (IR 17,5%). ${v.at(-1)>avg?'Acima da média recente: bom momento para travar taxas prefixadas longas.':'Abaixo da média recente: juros em queda favorecem prefixados e bolsa.'}</p>`:
+    c==='13522'?`<p>R$ 1.000 hoje compram o que R$ ${num(1000/(1+v.at(-1)/100),2)} compravam há 12 meses. ${v.at(-1)>4.5?'Acima do teto da meta: espere juros altos por mais tempo.':'Dentro da meta.'}</p>`:
+    c==='189'?`<p>Aluguel reajustado pelo IGP-M acumula a soma dos últimos 12 meses: ${pct(v.slice(-12).reduce((a,b)=>a*(1+b/100),1)*100-100)}. Compare com o IPCA na renegociação.</p>`:'<p>Acompanhe a tendência: subida contínua costuma antecipar decisões do Copom.</p>');}
+function tipCripto(sym){const c=(S.cripto||[]).find(x=>x.sym===sym);if(!c)return '';const cdi=S.ind.cdi;
+  const cdi30=(Math.pow(1+cdi/100,1/12)-1)*100;const r=c.spark?.length>2?c.spark.slice(1).map((x,i)=>Math.log(x/c.spark[i])):[];
+  const vol=r.length?Math.sqrt(r.reduce((a,b)=>a+b*b,0)/r.length)*Math.sqrt(365*6)*100:null;
+  return sec(`${c.name} (${c.sym})`,`<p>Preço: <b>${brl(c.price)}</b>${c.rank?` · ${c.rank}º maior do mundo`:''}.</p>`)+
+   sec('Desempenho x renda fixa',`<table><tr><th>Período</th><th>${c.sym}</th><th>CDI no período</th></tr>${[['24h',c.ch24,cdi/365],['7 dias',c.ch7,cdi*7/365],['30 dias',c.ch30,cdi30],['1 ano',c.ch1y,cdi]].map(([p,a,b])=>a==null?'':`<tr><td>${p}</td><td class="n">${chg(a)}</td><td class="n">${pct(b,2)}</td></tr>`).join('')}</table>`)+
+   sec('Risco',`<ul>${vol?`<li>Volatilidade anualizada (7d): <b>${pct(vol,0)}</b> — o CDI tem ~0%.</li>`:''}${c.athPct!=null?`<li>Está ${pct(Math.abs(c.athPct),1)} abaixo do topo histórico (${brl(c.ath)} em ${new Date(c.athDate).toLocaleDateString('pt-BR')}).</li>`:''}<li>R$ 1.000 aplicados há 1 ano valeriam ${c.ch1y!=null?brl(1000*(1+c.ch1y/100)):'—'} (CDI: ${brl(1000*(1+cdi*0.85/100))} líquido).</li><li>Sem FGC; risco de custódia — prefira corretoras reguladas e carteira própria para valores altos.</li></ul>`)+
+   (c.vol&&c.mcap?`<p class="note">Giro diário: ${pct(c.vol/c.mcap*100,1)} da capitalização (liquidez ${c.vol/c.mcap>0.05?'alta':'moderada'}).</p>`:'');}
