@@ -188,7 +188,7 @@ async function series(codes,n){
   if(location.protocol!=='file:'){try{const d=await getJSON(`/api/series?c=${codes.join(',')}&n=${n}`);if(Object.keys(d).length)return d;}catch(e){}}
   const out={};await Promise.all(codes.map(async c=>{try{out[c]=(await sgs(c,n)).map(r=>({data:r.data,valor:+r.valor.replace(',','.')}));}catch(e){}}));return out;}
 async function loadJuros(){
-  const d=await series(['4189','13522','432','4389','433','189','226','24369'],25);
+  const [d,dd]=await Promise.all([series(['4189','13522','433','189','226','24369'],25),series(['432','4389'],260)]);Object.assign(d,dd);
   const pts=c=>(d[c]||[]).map(r=>[br2t(r.data),r.valor]);
   const sel=pts('4189'),ipc=pts('13522');
   if(!sel.length&&!ipc.length){$('#chJuros').innerHTML='<p class="note">Banco Central indisponível no momento — tentaremos de novo em 30 min.</p>';$('#indTable').innerHTML='';return;}
@@ -197,8 +197,8 @@ async function loadJuros(){
   // atualiza KPIs com dados oficiais, se vierem
   const last=c=>d[c]?.at(-1)?.valor;
   if(last('432')!=null){S.ind.selic=last('432');S.ind.cdi=last('4389')??S.ind.cdi;S.ind.ipca12=last('13522')??S.ind.ipca12;S.ind.data=d['432'].at(-1).data;S.live.ind=true;renderKpis();renderInv();}
-  $('#indTable').innerHTML='<tr><th>Indicador</th><th>Atual</th><th>Há 12 meses</th><th>Mudança</th><th>Data</th></tr>'+IND_DEF.map(([c,n,u,txt])=>{const s=d[c];if(!s||!s.length)return '';
-    const cur=s.at(-1),old=s.length>12?s.at(-13):s[0];const dv=cur.valor-old.valor;
+  $('#indTable').innerHTML='<tr><th>Indicador</th><th>Atual</th><th>~12 meses antes</th><th>Mudança</th><th>Data</th></tr>'+IND_DEF.map(([c,n,u,txt])=>{const s=d[c];if(!s||!s.length)return '';
+    const cur=s.at(-1),alvo=br2t(cur.data)-365*864e5;const old=s.reduce((b,r)=>Math.abs(br2t(r.data)-alvo)<Math.abs(br2t(b.data)-alvo)?r:b,s[0]);const dv=cur.valor-old.valor;
     return `<tr data-tip="ind:${c}"><td><b>${n}</b></td><td class="n">${num(cur.valor,2)}${u}</td><td class="n">${num(old.valor,2)}${u}</td><td class="n ${dv>0?'dn':'up'}">${dv>0?'▲':dv<0?'▼':'='} ${num(Math.abs(dv),2)}</td><td>${cur.data}</td></tr>`;}).join('')+
     (sel.length&&ipc.length?`<tr data-tip="ind:real"><td><b>Juro real (ex-post)</b></td><td class="n">${pct(real.at(-1)?.[1]??0)}</td><td class="n">${pct(real[0]?.[1]??0)}</td><td class="n">—</td><td>calculado</td></tr>`:'');
   S.series=d;}
