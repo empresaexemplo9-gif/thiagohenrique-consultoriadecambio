@@ -61,7 +61,7 @@ function produtos(){const {cdi,selic,ipca12,tr}=S.ind;
   ];}
 function simula(p,valor,mes,meses){
   const im=Math.pow(1+p.taxa/100,1/12)-1;let bruto=valor;for(let i=0;i<meses;i++)bruto=bruto*(1+im)+mes;
-  const inv=valor+mes*meses,lucro=bruto-inv;const dias=meses*30;
+  const inv=valor+mes*meses,lucro=bruto-inv;const dias=Math.round(meses*30.44);
   const aliq=p.ir===true?irAliq(dias):p.ir==='acao'?15:0;const ir=Math.max(0,lucro)*aliq/100;
   const liq=bruto-ir;const inf=Math.pow(1+S.ind.ipca12/100,meses/12);
   return {inv,bruto,ir,aliq,liq,lucro:liq-inv,real:(liq/inv/inf-1)*100,anual:(Math.pow(liq/inv,12/meses)-1)*100};
@@ -74,7 +74,7 @@ function renderKpis(){const i=S.ind,u=S.fx.USD,e=S.fx.EUR;const lv=S.live.ind?'B
     ['Dólar comercial',u?'R$ '+num(u.bid):'—',u?`<span class="${u.pct>=0?'up':'dn'}">${u.pct>=0?'▲':'▼'} ${pct(u.pct)}</span> hoje`:''],['Euro comercial',e?'R$ '+num(e.bid):'—',e?`<span class="${e.pct>=0?'up':'dn'}">${e.pct>=0?'▲':'▼'} ${pct(e.pct)}</span> hoje`:'']];
   $('#kpis').innerHTML=k.map(x=>`<div class="kpi"><div class="l">${x[0]}</div><div class="v">${x[1]}</div><div class="s">${x[2]}</div></div>`).join('');}
 function fxRows(lim){return MOEDAS.slice(0,lim).map(([c,n,f])=>{const q=S.fx[c];if(!q)return `<tr><td>${f} ${c}</td><td>${n}</td><td colspan="3">indisponível</td></tr>`;
-  const turismo=q.ask*1.04;return `<tr><td>${f} <b>${c}</b></td><td>${n}</td><td class="n">R$ ${num(q.bid)}</td><td class="n">R$ ${num(q.ask)}</td><td class="n ${q.pct>=0?'up':'dn'}">${q.pct>=0?'▲':'▼'} ${pct(Math.abs(q.pct))}</td>${lim>10?`<td class="n">R$ ${num(q.low)} – ${num(q.high)}</td><td class="n">R$ ${num(turismo)}</td><td class="n">${num(1/q.bid,4)}</td><td>${q.src}</td>`:''}</tr>`;}).join('');}
+  const turismo=q.ask*1.04;return `<tr data-tip="fx:${c}"><td>${f} <b>${c}</b></td><td>${n}</td><td class="n">R$ ${num(q.bid)}</td><td class="n">R$ ${num(q.ask)}</td><td class="n ${q.pct>=0?'up':'dn'}">${q.pct>=0?'▲':'▼'} ${pct(Math.abs(q.pct))}</td>${lim>10?`<td class="n">R$ ${num(q.low)} – ${num(q.high)}</td><td class="n">R$ ${num(turismo)}</td><td class="n">${num(1/q.bid,4)}</td><td>${q.src}</td>`:''}</tr>`;}).join('');}
 function renderFx(){
   $('#homeFx').innerHTML='<tr><th>Moeda</th><th>Nome</th><th>Compra</th><th>Venda</th><th>Dia</th></tr>'+fxRows(10);
   $('#fxTable').innerHTML='<tr><th>Moeda</th><th>Nome</th><th>Compra</th><th>Venda</th><th>Var. dia</th><th>Mín – Máx</th><th>Turismo est.*</th><th>1 R$ =</th><th>Fonte</th></tr>'+fxRows(20)+'<tr><td colspan="9" class="note">* Turismo estimado = comercial + ~4% (spread médio de casas de câmbio, sem IOF).</td></tr>';
@@ -83,9 +83,9 @@ function renderInv(){
   const v=+$('#sVal').value||0,m=+$('#sMes').value||0,p=Math.max(1,+$('#sPrazo').value||1);
   const rows=produtos().map(x=>({x,r:simula(x,v,m,p)})).sort((a,b)=>b.r.liq-a.r.liq);
   $('#invTable').innerHTML=`<tr><th>Produto</th><th>Taxa a.a.</th><th>Investido</th><th>Bruto</th><th>IR</th><th>Líquido no resgate</th><th>Lucro líquido</th><th>Ganho real (desc. inflação)</th><th>Liquidez</th><th>Risco</th><th>FGC</th></tr>`+
-   rows.map(({x,r},i)=>`<tr class="${i===0?'best':''}"><td><b>${x.n}</b><div class="note">${x.obs}</div></td><td class="n">${pct(x.taxa)}</td><td class="n">${brl(r.inv)}</td><td class="n">${brl(r.bruto)}</td><td class="n">${r.aliq?brl(r.ir)+' ('+num(r.aliq,1)+'%)':'Isento'}</td><td class="n"><b>${brl(r.liq)}</b></td><td class="n ${r.lucro>=0?'up':'dn'}">${brl(r.lucro)}</td><td class="n ${r.real>=0?'up':'dn'}">${pct(r.real)}</td><td>${x.liq}</td><td>${riscoTag(x.risco)}</td><td>${x.fgc?'Sim':'Não'}</td></tr>`).join('');
+   rows.map(({x,r},i)=>`<tr data-tip="inv:${x.n}" class="${i===0?'best':''}"><td><b>${x.n}</b><div class="note">${x.obs}</div></td><td class="n">${pct(x.taxa)}</td><td class="n">${brl(r.inv)}</td><td class="n">${brl(r.bruto)}</td><td class="n">${r.aliq?brl(r.ir)+' ('+num(r.aliq,1)+'%)':'Isento'}</td><td class="n"><b>${brl(r.liq)}</b></td><td class="n ${r.lucro>=0?'up':'dn'}">${brl(r.lucro)}</td><td class="n ${r.real>=0?'up':'dn'}">${pct(r.real)}</td><td>${x.liq}</td><td>${riscoTag(x.risco)}</td><td>${x.fgc?'Sim':'Não'}</td></tr>`).join('');
   const h=produtos().slice(0,7).map(x=>({x,r:simula(x,10000,0,12)})).sort((a,b)=>b.r.liq-a.r.liq);
-  $('#homeInv').innerHTML='<tr><th>Produto</th><th>Líquido</th><th>Ganho real</th><th>Risco</th></tr>'+h.map(({x,r})=>`<tr><td>${x.n}</td><td class="n">${brl(r.liq)}</td><td class="n ${r.real>=0?'up':'dn'}">${pct(r.real)}</td><td>${riscoTag(x.risco)}</td></tr>`).join('');
+  $('#homeInv').innerHTML='<tr><th>Produto</th><th>Líquido</th><th>Ganho real</th><th>Risco</th></tr>'+h.map(({x,r})=>`<tr data-tip="inv12:${x.n}"><td>${x.n}</td><td class="n">${brl(r.liq)}</td><td class="n ${r.real>=0?'up':'dn'}">${pct(r.real)}</td><td>${riscoTag(x.risco)}</td></tr>`).join('');
   $('#invGuide').innerHTML='<tr><th>Produto</th><th>Para quem</th><th>Ganhos</th><th>Riscos</th><th>Liquidez</th></tr>'+produtos().map(x=>`<tr><td><b>${x.n}</b></td><td>${x.risco===1?'Reserva de emergência, iniciantes':x.risco===2?'Objetivos de 1–5 anos':'Longo prazo, perfil arrojado'}</td><td>${pct(x.taxa)} a.a. ${x.ir===false?'(isento)':'(bruto)'}</td><td>${x.obs}</td><td>${x.liq}</td></tr>`).join('');
 }
 // Instituições: spreads típicos sobre o comercial (faixas observadas em 2025–2026; verifique no ato)
@@ -111,14 +111,14 @@ function renderCambio(){
   const lst=INST.filter(i=>i[key]!=null).map(i=>{const taxa=fx.ask*(1+i[key]/100);const sub=taxa*q;const iof=sub*IOF[op]/100;const tot=sub+iof+i.tarifa;return {i,sp:i[key],taxa,iof,tot,vet:tot/q};}).sort((a,b)=>a.tot-b.tot);
   const best=lst[0]?.tot||0;
   $('#instTable').innerHTML=`<tr><th>#</th><th>Instituição</th><th>Tipo</th><th>Spread</th><th>Cotação c/ spread</th><th>IOF (${pct(IOF[op],1)})</th><th>Total em R$</th><th>VET (R$/${c})</th><th>Diferença p/ melhor</th><th>Segurança</th><th>Reputação*</th></tr>`+
-   lst.map((x,k)=>`<tr class="${k===0?'best':''}"><td>${k+1}</td><td><a href="${x.i.url}" target="_blank" rel="noopener"><b>${x.i.n}</b></a></td><td>${x.i.tipo}</td><td class="n">${pct(x.sp,1)}</td><td class="n">R$ ${num(x.taxa)}</td><td class="n">${brl(x.iof)}</td><td class="n"><b>${brl(x.tot)}</b></td><td class="n">R$ ${num(x.vet)}</td><td class="n ${k?'dn':'up'}">${k?'+'+brl(x.tot-best):'melhor'}</td><td>${x.i.seg}</td><td><a href="https://www.reclameaqui.com.br/busca/?q=${encodeURIComponent(x.i.n)}" target="_blank" rel="noopener">${x.i.rep}</a></td></tr>`).join('')+
+   lst.map((x,k)=>`<tr data-tip="inst:${x.i.n}" class="${k===0?'best':''}"><td>${k+1}</td><td><a href="${x.i.url}" target="_blank" rel="noopener"><b>${x.i.n}</b></a></td><td>${x.i.tipo}</td><td class="n">${pct(x.sp,1)}</td><td class="n">R$ ${num(x.taxa)}</td><td class="n">${brl(x.iof)}</td><td class="n"><b>${brl(x.tot)}</b></td><td class="n">R$ ${num(x.vet)}</td><td class="n ${k?'dn':'up'}">${k?'+'+brl(x.tot-best):'melhor'}</td><td>${x.i.seg}</td><td><a href="https://www.reclameaqui.com.br/busca/?q=${encodeURIComponent(x.i.n)}" target="_blank" rel="noopener">${x.i.rep}</a></td></tr>`).join('')+
    `<tr><td colspan="11" class="note">Comercial agora: R$ ${num(fx.ask)} · Fonte ${fx.src}. *Reputação resumida de Reclame Aqui/ranking BCB — clique para ver a nota atual.</td></tr>`;
 }
 function renderFocus(){
   if(!S.focus||!S.focus.length){$('#focus').innerHTML='<tr><td>Não foi possível consultar o Focus agora. Veja em <a href="https://www.bcb.gov.br/publicacoes/focus" target="_blank">bcb.gov.br/publicacoes/focus</a>.</td></tr>';return;}
   const anos=[...new Set(S.focus.map(r=>r.DataReferencia))].sort();const ind=['IPCA','Selic','Câmbio','PIB Total'];
   const nome={IPCA:'IPCA (%)',Selic:'Selic fim de ano (%)','Câmbio':'Dólar fim de ano (R$)','PIB Total':'PIB (%)'};
-  $('#focus').innerHTML='<tr><th>Indicador</th>'+anos.map(a=>`<th>${a} (mediana)</th><th>mín–máx</th>`).join('')+'</tr>'+ind.map(i=>'<tr><td><b>'+nome[i]+'</b></td>'+anos.map(a=>{const r=S.focus.find(x=>x.Indicador===i&&x.DataReferencia===a);return r?`<td class="n">${num(r.Mediana,2)}</td><td class="n">${num(r.Minimo,2)} – ${num(r.Maximo,2)}</td>`:'<td>—</td><td>—</td>';}).join('')+'</tr>').join('');
+  $('#focus').innerHTML='<tr><th>Indicador</th>'+anos.map(a=>`<th>${a} (mediana)</th><th>mín–máx</th>`).join('')+'</tr>'+ind.map(i=>'<tr data-tip="focus:'+i+'"><td><b>'+nome[i]+'</b></td>'+anos.map(a=>{const r=S.focus.find(x=>x.Indicador===i&&x.DataReferencia===a);return r?`<td class="n">${num(r.Mediana,2)}</td><td class="n">${num(r.Minimo,2)} – ${num(r.Maximo,2)}</td>`:'<td>—</td><td>—</td>';}).join('')+'</tr>').join('');
   $('#focusSrc').textContent='Fonte: Boletim Focus — BCB, divulgação de '+S.focus[0].Data+' (mediana de ~100 instituições).';
 }
 const CONS=[
@@ -205,3 +205,60 @@ async function loadCripto(){try{const d=await getJSON('https://economia.awesomea
 $('#cMoeda').addEventListener('change',loadHist);$('#hDias').addEventListener('change',loadHist);
 loadJuros();loadHist();loadPtax();loadCripto();
 setInterval(()=>{loadCripto();loadPtax();},5*60*1000);setInterval(loadHist,30*60*1000);
+
+
+// ---------- Explicação ao parar o cursor 4 s sobre uma linha ----------
+const TIP_MS=4000;
+const tipBox=document.createElement('div');tipBox.id='tip';tipBox.setAttribute('role','tooltip');document.body.appendChild(tipBox);
+const sec=(t,b)=>`<h4>${t}</h4>${b}`;
+const cmp=(a,b)=>`<span class="${a>=b?'up':'dn'}">${a>=b?'+':''}${brl(a-b)}</span>`;
+function tipFx(c){const q=S.fx[c];const m=MOEDAS.find(x=>x[0]===c);if(!q)return '';
+  const spread=(q.ask/q.bid-1)*100,amp=(q.high/q.low-1)*100,mil=q.ask*1000;
+  const usd=S.fx.USD;const vsUsd=usd?usd.bid/q.bid:null;
+  const melhor=Math.min(...INST.filter(i=>i.con!=null).map(i=>i.con)),pior=Math.max(...INST.filter(i=>i.esp!=null).map(i=>i.esp));
+  return sec(`${m[2]} ${m[1]} (${c})`,`<p>1 ${c} custa <b>R$ ${num(q.ask)}</b> no mercado comercial (venda). Quem vende ${c} recebe R$ ${num(q.bid)} (compra).</p>`)+
+   sec('Como ler',`<ul><li><b>Compra x venda:</b> diferença de ${pct(spread,3)} — é o spread do atacado; no varejo ele é bem maior.</li><li><b>Variação do dia:</b> ${q.pct>=0?'subiu':'caiu'} ${pct(Math.abs(q.pct))}; ${q.pct>=0?'o Real perdeu valor frente a ela hoje':'o Real ganhou valor frente a ela hoje'}.</li><li><b>Amplitude do dia:</b> ${pct(amp)} entre mínima e máxima — ${amp>1.5?'dia volátil, cuidado ao comprar tudo de uma vez':'oscilação normal'}.</li></ul>`)+
+   sec('Comparativo prático — comprar 1.000 '+c,`<table><tr><td>Comercial (referência)</td><td class="n">${brl(mil)}</td></tr><tr><td>Conta global (melhor spread ${pct(melhor,1)} + IOF 3,5%)</td><td class="n">${brl(mil*(1+melhor/100)*1.035)}</td></tr><tr><td>Papel-moeda em casa de câmbio (~4% + IOF 1,1%)</td><td class="n">${brl(mil*1.04*1.011)}</td></tr><tr><td>Papel-moeda em banco grande (${pct(pior,1)} + IOF 1,1%)</td><td class="n">${brl(mil*(1+pior/100)*1.011)}</td></tr><tr><td>Cartão de crédito comum (5% + IOF 3,5%)</td><td class="n">${brl(mil*1.05*1.035)}</td></tr></table>`)+
+   (vsUsd&&c!=='USD'?`<p class="note">Em dólar: 1 ${c} = US$ ${num(1/vsUsd,4)} · 1 US$ = ${num(vsUsd,4)} ${c}.</p>`:'')+`<p class="note">Fonte: ${q.src} · ${q.ts||''}</p>`;}
+function tipInv(nome,meses,valor,mes){const ps=produtos();const p=ps.find(x=>x.n===nome);if(!p)return '';
+  const r=simula(p,valor,mes,meses);const all=ps.map(x=>({x,r:simula(x,valor,mes,meses)})).sort((a,b)=>b.r.liq-a.r.liq);
+  const poup=all.find(o=>o.x.n==='Poupança').r,best=all[0],pos=all.findIndex(o=>o.x.n===nome)+1;
+  const aliq=p.ir===true?irAliq(Math.round(meses*30.44)):p.ir==='acao'?15:0;
+  const prox=p.ir===true&&Math.round(meses*30.44)<=720?[180,360,720].find(d=>d>=Math.round(meses*30.44)):null;
+  return sec(p.n,`<p>${p.obs}</p>`)+
+   sec(`Resultado em ${meses} meses (${brl(valor)}${mes?` + ${brl(mes)}/mês`:''})`,`<table><tr><td>Taxa usada</td><td class="n">${pct(p.taxa)} a.a.</td></tr><tr><td>Investido</td><td class="n">${brl(r.inv)}</td></tr><tr><td>Bruto</td><td class="n">${brl(r.bruto)}</td></tr><tr><td>Imposto de renda</td><td class="n">${aliq?brl(r.ir)+' ('+num(aliq,1)+'%)':'isento'}</td></tr><tr><td><b>Líquido no resgate</b></td><td class="n"><b>${brl(r.liq)}</b></td></tr><tr><td>Rentabilidade líquida anualizada</td><td class="n">${pct(r.anual)}</td></tr><tr><td>Ganho acima da inflação</td><td class="n ${r.real>=0?'up':'dn'}">${pct(r.real)}</td></tr></table>`)+
+   sec('Comparativo',`<ul><li>Posição: <b>${pos}º de ${all.length}</b> no prazo escolhido.</li><li>Contra a poupança: ${cmp(r.liq,poup.liq)}.</li><li>Contra o melhor (${best.x.n}): ${cmp(r.liq,best.r.liq)}${best.x.risco>p.risco?' — mas com risco maior':''}.</li>${prox?`<li>Esperando até ${prox+1} dias o IR cai para ${irAliq(prox+1)}%.</li>`:''}</ul>`)+
+   sec('Riscos e liquidez',`<ul><li><b>Risco:</b> ${['','baixo','médio','alto'][p.risco]}${p.fgc?' — coberto pelo FGC até R$ 250 mil':' — sem FGC'}.</li><li><b>Liquidez:</b> ${p.liq}.</li>${p.n.includes('IPCA')||p.n.includes('Prefixado')?'<li>Resgate antes do vencimento usa o preço de mercado do dia: pode ganhar ou perder.</li>':''}${p.risco===3?'<li>Rentabilidade estimada por média histórica, <b>não garantida</b>.</li>':''}</ul>`);}
+function tipInst(nome){const i=INST.find(x=>x.n===nome);if(!i)return '';
+  const c=$('#cMoeda').value,q=+$('#cQtd').value||0,op=$('#cOp').value,fx=S.fx[c];if(!fx)return '';
+  const key={especie:'esp',cartao:'car',conta:'con'}[op],sp=i[key];const base=fx.ask*q,sprd=base*sp/100,iof=(base+sprd)*IOF[op]/100,tot=base+sprd+iof+i.tarifa;
+  const outros=INST.filter(x=>x[key]!=null).map(x=>({n:x.n,t:fx.ask*q*(1+x[key]/100)*(1+IOF[op]/100)})).sort((a,b)=>a.t-b.t);
+  return sec(i.n,`<p>${i.tipo}. Segurança: <b>${i.seg}</b>. Reputação: <b>${i.rep}</b>.</p>`)+
+   sec(`Decomposição do custo de ${num(q,0)} ${c}`,`<table><tr><td>Valor no câmbio comercial</td><td class="n">${brl(base)}</td></tr><tr><td>Spread da instituição (${pct(sp,1)})</td><td class="n">${brl(sprd)}</td></tr><tr><td>IOF (${pct(IOF[op],1)})</td><td class="n">${brl(iof)}</td></tr><tr><td>Tarifas</td><td class="n">${brl(i.tarifa)}</td></tr><tr><td><b>Total</b></td><td class="n"><b>${brl(tot)}</b></td></tr></table><p>Você paga ${pct((tot/base-1)*100)} acima do comercial.</p>`)+
+   sec('Comparativo',`<ul><li>Mais barata: ${outros[0].n} (${brl(outros[0].t)}) — ${outros[0].n===i.n?'<b>é esta</b>':'diferença '+cmp(outros[0].t,tot).replace('+','')+' a mais aqui'}.</li><li>Mais cara: ${outros.at(-1).n} (${brl(outros.at(-1).t)}).</li><li>Economia potencial entre a pior e a melhor: ${brl(outros.at(-1).t-outros[0].t)}.</li></ul><p class="note">Spreads são referências típicas; confirme no app/loja antes de fechar.</p>`);}
+const FOCUS_TXT={IPCA:['Inflação oficial esperada para o ano.','ipca12','Acima de 4,5% (teto da meta) o BC tende a manter juros altos.'],Selic:['Taxa básica esperada no fim do ano.','selic','Selic caindo = renda fixa pós-fixada rende menos; prefixados e ações tendem a se valorizar.'],'Câmbio':['Dólar esperado no fim do ano.',null,'Se a mediana está acima da cotação atual, o mercado espera Real mais fraco.'],'PIB Total':['Crescimento da economia esperado.',null,'PIB forte favorece lucros das empresas e a bolsa.']};
+function tipFocus(i){const t=FOCUS_TXT[i];if(!t)return '';const rs=(S.focus||[]).filter(r=>r.Indicador===i).sort((a,b)=>a.DataReferencia-b.DataReferencia);
+  const atual=i==='Câmbio'?S.fx.USD?.bid:t[1]?S.ind[t[1]]:null;
+  return sec(i,`<p>${t[0]}</p>`)+(rs.length?sec('Projeções x hoje',`<table><tr><th>Ano</th><th>Mediana</th><th>Faixa (mín–máx)</th>${atual!=null?'<th>vs. hoje</th>':''}</tr>${rs.map(r=>`<tr><td>${r.DataReferencia}</td><td class="n">${num(r.Mediana,2)}</td><td class="n">${num(r.Minimo,2)}–${num(r.Maximo,2)}</td>${atual!=null?`<td class="n">${r.Mediana>=atual?'▲':'▼'} ${num(r.Mediana-atual,2)}</td>`:''}</tr>`).join('')}</table>${atual!=null?`<p>Valor atual: <b>${num(atual,2)}</b>.</p>`:''}`):'')+sec('O que significa',`<p>${t[2]}</p><p class="note">Faixa larga entre mínimo e máximo = mais incerteza entre os analistas.</p>`);}
+function tipGeneric(tr){const tb=tr.closest('table');const hs=[...tb.querySelectorAll('tr:first-child th')].map(t=>t.textContent);
+  const cs=[...tr.children];if(!hs.length||!cs.length)return '';
+  const card=tr.closest('.card');const tit=card?.querySelector('h2')?.textContent||'';const src=card?.querySelector('.src')?.innerHTML||'';
+  return sec(cs[0].textContent,`<p class="note">${tit}</p><table>${cs.map((c,k)=>hs[k]&&k?`<tr><td>${hs[k]}</td><td>${c.innerHTML}</td></tr>`:'').join('')}</table>`)+(src?`<p class="note">${src}</p>`:'');}
+function tipFor(tr){const k=tr.dataset.tip||'';const [t,...r]=k.split(':');const v=r.join(':');
+  const val=+$('#sVal').value||0,mes=+$('#sMes').value||0,pr=Math.max(1,+$('#sPrazo').value||1);
+  return (t==='fx'&&tipFx(v))||(t==='inv'&&tipInv(v,pr,val,mes))||(t==='inv12'&&tipInv(v,12,10000,0))||(t==='inst'&&tipInst(v))||(t==='focus'&&tipFocus(v))||tipGeneric(tr);}
+let tipTimer=null,tipRow=null,mx=0,my=0;
+function hideTip(){clearTimeout(tipTimer);tipBox.classList.remove('on');tipRow?.classList.remove('tipping');tipRow=null;}
+function placeTip(){const w=tipBox.offsetWidth,h=tipBox.offsetHeight,W=innerWidth,H=innerHeight;
+  let x=mx+16,y=my+16;if(x+w>W-8)x=Math.max(8,mx-w-16);if(y+h>H-8)y=Math.max(8,H-h-8);tipBox.style.left=x+'px';tipBox.style.top=y+'px';}
+function arm(tr){clearTimeout(tipTimer);tipRow?.classList.remove('tipping');tipRow=tr;tr.classList.add('tipping');
+  tipTimer=setTimeout(()=>{const h=tipFor(tr);if(!h)return;tipBox.innerHTML=h+'<p class="note tipclose">Mova o cursor para fechar.</p>';tipBox.classList.add('on');placeTip();},TIP_MS);}
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;if(tipBox.contains(e.target))return;
+  const tr=e.target.closest('main table tr');const valid=tr&&tr.querySelector('td')&&!tr.closest('#tip');
+  if(tipBox.classList.contains('on')){if(Math.hypot(e.movementX,e.movementY)>2)hideTip();else return;}
+  if(!valid){if(tipRow)hideTip();return;}
+  arm(tr);}); // qualquer movimento reinicia a contagem: só abre com o cursor parado 4 s
+document.addEventListener('scroll',hideTip,true);
+// Toque: pressionar e segurar 1 s abre a explicação
+let lp;document.addEventListener('touchstart',e=>{const tr=e.target.closest('main table tr');if(!tr||!tr.querySelector('td'))return;const t=e.touches[0];mx=t.clientX;my=t.clientY;lp=setTimeout(()=>{tipBox.innerHTML=tipFor(tr)+'<p class="note tipclose">Toque fora para fechar.</p>';tipBox.classList.add('on');placeTip();},1000);},{passive:true});
+document.addEventListener('touchend',()=>clearTimeout(lp));document.addEventListener('touchstart',e=>{if(!tipBox.contains(e.target)&&!e.target.closest('main table tr'))hideTip();},{passive:true});
