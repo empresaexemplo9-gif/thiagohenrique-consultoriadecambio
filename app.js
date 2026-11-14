@@ -5,7 +5,7 @@ const num=(v,d=4)=>v.toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFrac
 const pct=(v,d=2)=>num(v,d)+'%';
 
 // 20 moedas de maior circulação/negociação global (BIS Triennial Survey), cotadas contra o Real
-const MOEDAS=[['USD','Dólar americano','🇺🇸'],['EUR','Euro','🇪🇺'],['JPY','Iene japonês','🇯🇵'],['GBP','Libra esterlina','🇬🇧'],['CNY','Yuan chinês','🇨🇳'],['AUD','Dólar australiano','🇦🇺'],['CAD','Dólar canadense','🇨🇦'],['CHF','Franco suíço','🇨🇭'],['HKD','Dólar de Hong Kong','🇭🇰'],['SGD','Dólar de Singapura','🇸🇬'],['SEK','Coroa sueca','🇸🇪'],['KRW','Won sul-coreano','🇰🇷'],['NOK','Coroa norueguesa','🇳🇴'],['NZD','Dólar neozelandês','🇳🇿'],['INR','Rupia indiana','🇮🇳'],['MXN','Peso mexicano','🇲🇽'],['TWD','Dólar taiwanês','🇹🇼'],['ZAR','Rand sul-africano','🇿🇦'],['DKK','Coroa dinamarquesa','🇩🇰'],['ARS','Peso argentino','🇦🇷']];
+const MOEDAS=[['USD','Dólar americano',''],['EUR','Euro',''],['JPY','Iene japonês',''],['GBP','Libra esterlina',''],['CNY','Yuan chinês',''],['AUD','Dólar australiano',''],['CAD','Dólar canadense',''],['CHF','Franco suíço',''],['HKD','Dólar de Hong Kong',''],['SGD','Dólar de Singapura',''],['SEK','Coroa sueca',''],['KRW','Won sul-coreano',''],['NOK','Coroa norueguesa',''],['NZD','Dólar neozelandês',''],['INR','Rupia indiana',''],['MXN','Peso mexicano',''],['TWD','Dólar taiwanês',''],['ZAR','Rand sul-africano',''],['DKK','Coroa dinamarquesa',''],['ARS','Peso argentino','']];
 
 // Estado: começa com valores de referência (exibidos como "referência" até a API responder)
 const S={fx:{},live:{fx:false,ind:false},ind:{selic:14.25,cdi:14.15,ipca12:4.6,tr:0.17},focus:null,t:null};
@@ -73,8 +73,8 @@ function renderKpis(){const i=S.ind,u=S.fx.USD,e=S.fx.EUR;const lv=S.live.ind?'B
   const k=[['Selic (meta)',pct(i.selic),lv],['CDI anual',pct(i.cdi),lv],['IPCA 12 meses',pct(i.ipca12),lv],['Juro real (Selic − IPCA)',pct(((1+i.selic/100)/(1+i.ipca12/100)-1)*100),'acima da inflação'],
     ['Dólar comercial',u?'R$ '+num(u.bid):'—',u?`<span class="${u.pct>=0?'up':'dn'}">${u.pct>=0?'▲':'▼'} ${pct(u.pct)}</span> hoje`:''],['Euro comercial',e?'R$ '+num(e.bid):'—',e?`<span class="${e.pct>=0?'up':'dn'}">${e.pct>=0?'▲':'▼'} ${pct(e.pct)}</span> hoje`:'']];
   $('#kpis').innerHTML=k.map(x=>`<div class="kpi"><div class="l">${x[0]}</div><div class="v">${x[1]}</div><div class="s">${x[2]}</div></div>`).join('');}
-function fxRows(lim){return MOEDAS.slice(0,lim).map(([c,n,f])=>{const q=S.fx[c];if(!q)return `<tr><td>${f} ${c}</td><td>${n}</td><td colspan="3">indisponível</td></tr>`;
-  const turismo=q.ask*1.04;return `<tr data-tip="fx:${c}"><td>${f} <b>${c}</b></td><td>${n}</td><td class="n">R$ ${num(q.bid)}</td><td class="n">R$ ${num(q.ask)}</td><td class="n ${q.pct>=0?'up':'dn'}">${q.pct>=0?'▲':'▼'} ${pct(Math.abs(q.pct))}</td>${lim>10?`<td class="n">R$ ${num(q.low)} – ${num(q.high)}</td><td class="n">R$ ${num(turismo)}</td><td class="n">R$ ${num(turismo*1.011)}</td><td class="n">R$ ${num(q.ask*1.02*1.035)}</td><td class="n">${num(1/q.bid,4)}</td><td>${q.src}</td>`:''}</tr>`;}).join('');}
+function fxRows(lim){return MOEDAS.slice(0,lim).map(([c,n,f])=>{const q=S.fx[c];if(!q)return `<tr><td><span class="cc">${c}</span></td><td>${n}</td><td colspan="3">indisponível</td></tr>`;
+  const turismo=q.ask*1.04;return `<tr data-tip="fx:${c}"><td><span class="cc">${c}</span></td><td>${n}</td><td class="n">R$ ${num(q.bid)}</td><td class="n">R$ ${num(q.ask)}</td><td class="n ${q.pct>=0?'up':'dn'}">${q.pct>=0?'▲':'▼'} ${pct(Math.abs(q.pct))}</td>${lim>10?`<td class="n">R$ ${num(q.low)} – ${num(q.high)}</td><td class="n">R$ ${num(turismo)}</td><td class="n">R$ ${num(turismo*1.011)}</td><td class="n">R$ ${num(q.ask*1.02*1.035)}</td><td class="n">${num(1/q.bid,4)}</td><td>${q.src}</td>`:''}</tr>`;}).join('');}
 function renderFx(){
   $('#homeFx').innerHTML='<tr><th>Moeda</th><th>Nome</th><th>Compra</th><th>Venda</th><th>Dia</th></tr>'+fxRows(10);
   $('#fxTable').innerHTML='<tr><th>Moeda</th><th>Nome</th><th>Compra</th><th>Venda</th><th>Var. dia</th><th>Mín – Máx</th><th>Turismo s/ IOF*</th><th>Espécie c/ IOF 1,1%</th><th>Cartão/conta c/ IOF 3,5%**</th><th>1 R$ =</th><th>Fonte</th></tr>'+fxRows(20)+'<tr><td colspan="11" class="note">* Turismo estimado = comercial + ~4% (spread médio de casas de câmbio), antes do IOF. ** Conta global/cartão pré-pago com spread médio ~2% + IOF 3,5%.</td></tr>';
@@ -106,7 +106,7 @@ const IOF={especie:1.1,cartao:3.5,conta:3.5};
 // IOF sobre rendimento de renda fixa: regressivo de 96% (dia 1) a 0% (dia 30) — Decreto 6.306/2007
 const iofRF=d=>d>=30?0:[96,93,90,86,83,80,76,73,70,66,63,60,56,53,50,46,43,40,36,33,30,26,23,20,16,13,10,6,3][Math.max(1,d)-1];
 function renderCambio(){
-  const sel=$('#cMoeda');if(!sel.options.length)sel.innerHTML=MOEDAS.map(m=>`<option value="${m[0]}">${m[2]} ${m[0]} — ${m[1]}</option>`).join('');
+  const sel=$('#cMoeda');if(!sel.options.length)sel.innerHTML=MOEDAS.map(m=>`<option value="${m[0]}">${m[0]} — ${m[1]}</option>`).join('');
   const c=sel.value,q=+$('#cQtd').value||0,op=$('#cOp').value,fx=S.fx[c];
   if(!fx){$('#instTable').innerHTML='<tr><td>Cotação indisponível no momento.</td></tr>';return;}
   const key={especie:'esp',cartao:'car',conta:'con'}[op];
@@ -124,21 +124,21 @@ function renderFocus(){
   $('#focusSrc').textContent='Fonte: Boletim Focus — BCB, divulgação de '+S.focus[0].Data+' (mediana de ~100 instituições).';
 }
 const CONS=[
- ['💰 Reserva e orçamento',['Reserva de emergência: 6 meses de gastos (12 se autônomo) em Tesouro Selic ou CDB liquidez diária.','Regra 50/30/20: necessidades / desejos / investimentos.','Quite dívidas com juros acima do CDI antes de investir (cartão rotativo passa de 400% a.a.).']],
- ['🏠 Compra e venda de bens (imóveis, veículos)',['Compare financiamento (CET) com o rendimento líquido do dinheiro: se o CET > rendimento, pagar à vista é melhor.','Imóvel: custos de 4–5% (ITBI + cartório) além do preço. Aluguel ideal ≈ 0,4–0,5% do valor/mês.','Venda de imóvel: ganho de capital tem IR de 15% a 22,5%, com isenções (único imóvel até R$ 440 mil; recompra em 180 dias).','Veículo perde ~15–20% no 1º ano; consórcio só vale sem pressa e sem lance alto.']],
- ['💱 Moedas e viagens',['Compre câmbio aos poucos (preço médio) em vez de tudo de uma vez.','Para viagem: conta global (IOF 3,5%, spread baixo) + pouco papel-moeda (IOF 1,1%) para emergências.','Evite trocar no aeroporto e cartão de crédito comum (spread ~5% + IOF).','Avise o banco, leve 2 cartões de bandeiras diferentes e contrate seguro-viagem (obrigatório na Europa — Schengen: cobertura mín. €30 mil).']],
- ['🛡️ Seguros',['Vida: cobertura ≈ 5–10× a renda anual se há dependentes.','Saúde: compare rede, coparticipação e reajuste (ANS regula individuais).','Auto/residencial: cote em 3+ seguradoras ou corretor; verifique registro na SUSEP (susep.gov.br).','Evite seguro "embutido" em empréstimo — é venda casada (proibida).']],
- ['📈 Ações e investimentos',['Defina perfil (conservador/moderado/arrojado) — suitability é obrigatório nas corretoras.','Diversifique: renda fixa + FIIs + ações + exterior (ETFs como IVVB11).','Venda de ações até R$ 20 mil/mês é isenta de IR (swing trade, exceto ETFs).','Use corretoras grandes, verifique registro na CVM e no FGC/B3.']],
- ['🏢 Empreendimentos',['Calcule payback e TIR; o projeto precisa render mais que o CDI líquido + prêmio de risco.','Separe PF e PJ desde o início; MEI até R$ 81 mil/ano, Simples Nacional até R$ 4,8 mi.','Capital de giro: 3–6 meses de custos fixos.','Linhas com juros subsidiados: Pronampe, BNDES, Desenvolve SP etc.']],
- ['📜 Patrimônio e sucessão',['Previdência privada (PGBL se declara completo, VGBL caso contrário) facilita sucessão sem inventário.','Holding familiar costuma compensar acima de patrimônio relevante; avalie com advogado e contador.','Testamento e seguro de vida reduzem custos de inventário (ITCMD 4–8%).']],
+ ['wallet|Reserva e orçamento',['Reserva de emergência: 6 meses de gastos (12 se autônomo) em Tesouro Selic ou CDB liquidez diária.','Regra 50/30/20: necessidades / desejos / investimentos.','Quite dívidas com juros acima do CDI antes de investir (cartão rotativo passa de 400% a.a.).']],
+ ['home|Compra e venda de bens (imóveis, veículos)',['Compare financiamento (CET) com o rendimento líquido do dinheiro: se o CET > rendimento, pagar à vista é melhor.','Imóvel: custos de 4–5% (ITBI + cartório) além do preço. Aluguel ideal ≈ 0,4–0,5% do valor/mês.','Venda de imóvel: ganho de capital tem IR de 15% a 22,5%, com isenções (único imóvel até R$ 440 mil; recompra em 180 dias).','Veículo perde ~15–20% no 1º ano; consórcio só vale sem pressa e sem lance alto.']],
+ ['plane|Moedas e viagens',['Compre câmbio aos poucos (preço médio) em vez de tudo de uma vez.','Para viagem: conta global (IOF 3,5%, spread baixo) + pouco papel-moeda (IOF 1,1%) para emergências.','Evite trocar no aeroporto e cartão de crédito comum (spread ~5% + IOF).','Avise o banco, leve 2 cartões de bandeiras diferentes e contrate seguro-viagem (obrigatório na Europa — Schengen: cobertura mín. €30 mil).']],
+ ['shield|Seguros',['Vida: cobertura ≈ 5–10× a renda anual se há dependentes.','Saúde: compare rede, coparticipação e reajuste (ANS regula individuais).','Auto/residencial: cote em 3+ seguradoras ou corretor; verifique registro na SUSEP (susep.gov.br).','Evite seguro "embutido" em empréstimo — é venda casada (proibida).']],
+ ['trend|Ações e investimentos',['Defina perfil (conservador/moderado/arrojado) — suitability é obrigatório nas corretoras.','Diversifique: renda fixa + FIIs + ações + exterior (ETFs como IVVB11).','Venda de ações até R$ 20 mil/mês é isenta de IR (swing trade, exceto ETFs).','Use corretoras grandes, verifique registro na CVM e no FGC/B3.']],
+ ['building|Empreendimentos',['Calcule payback e TIR; o projeto precisa render mais que o CDI líquido + prêmio de risco.','Separe PF e PJ desde o início; MEI até R$ 81 mil/ano, Simples Nacional até R$ 4,8 mi.','Capital de giro: 3–6 meses de custos fixos.','Linhas com juros subsidiados: Pronampe, BNDES, Desenvolve SP etc.']],
+ ['doc|Patrimônio e sucessão',['Previdência privada (PGBL se declara completo, VGBL caso contrário) facilita sucessão sem inventário.','Holding familiar costuma compensar acima de patrimônio relevante; avalie com advogado e contador.','Testamento e seguro de vida reduzem custos de inventário (ITCMD 4–8%).']],
 ];
-function renderCons(){$('#consult').innerHTML=CONS.map(([t,l])=>`<div class="card"><h2>${t}</h2><ul>${l.map(x=>`<li>${x}</li>`).join('')}</ul></div>`).join('');}
+function renderCons(){$('#consult').innerHTML=CONS.map(([t,l])=>{const [ic,tt]=t.split('|');return `<div class="card"><h2 class="hi">${ico(ic)}${tt}</h2><ul>${l.map(x=>`<li>${x}</li>`).join('')}</ul></div>`;}).join('');}
 function renderDiag(){const r=+$('#dRenda').value||0,g=+$('#dGasto').value||0,res=+$('#dRes').value||0,d=+$('#dDiv').value||0;
   const sobra=r-g,taxa=r?sobra/r*100:0,meses=g?res/g:0,alvo=g*6;
   const p=produtos().find(x=>x.n.startsWith('Tesouro Selic'));const fut=simula(p,res,Math.max(sobra,0),120);
-  $('#diag').innerHTML=`<div><b>Taxa de poupança:</b> ${pct(taxa,1)} ${taxa>=20?'✅ ótima':taxa>=10?'⚠️ razoável':'❌ baixa — reveja gastos'}</div>
-  <div><b>Reserva:</b> cobre ${num(meses,1)} meses ${meses>=6?'✅':'⚠️ meta '+brl(alvo)}</div>
-  <div><b>Dívidas:</b> ${d>0?'priorize quitar ('+brl(d)+') — juros de dívida superam investimentos':'✅ sem dívidas'}</div>
+  $('#diag').innerHTML=`<div><b>Taxa de poupança:</b> ${pct(taxa,1)} ${taxa>=20?ico('ok','ok')+' ótima':taxa>=10?ico('warn','wa')+' razoável':ico('bad','ba')+' baixa — reveja gastos'}</div>
+  <div><b>Reserva:</b> cobre ${num(meses,1)} meses ${meses>=6?ico('ok','ok'):ico('warn','wa')+' meta '+brl(alvo)}</div>
+  <div><b>Dívidas:</b> ${d>0?'priorize quitar ('+brl(d)+') — juros de dívida superam investimentos':ico('ok','ok')+' sem dívidas'}</div>
   <div><b>Em 10 anos</b> (sobra mensal no Tesouro Selic): ${brl(fut.liq)} líquidos</div>`;}
 
 function renderAll(){renderKpis();renderFx();renderInv();renderCambio();renderFocus();renderDiag();
@@ -209,7 +209,7 @@ async function loadHist(){const c=$('#cMoeda').value||'USD',n=$('#hDias').value;
     const rets=v.slice(1).map((x,i)=>Math.log(x/v[i]));const m=rets.reduce((a,b)=>a+b,0)/rets.length;
     const vol=Math.sqrt(rets.reduce((a,b)=>a+(b-m)**2,0)/rets.length)*Math.sqrt(252)*100;
     $('#chFx').innerHTML=svgChart([{nome:c,cor:'#1d6fe0',pts}],{fmt:x=>num(x,x<1?4:2)});
-    $('#hStats').innerHTML=`Variação no período: <b class="${var_>=0?'up':'dn'}">${pct(var_)}</b> · Mínima R$ ${num(Math.min(...v))} · Máxima R$ ${num(Math.max(...v))} · Média R$ ${num(v.reduce((a,b)=>a+b,0)/v.length)} · Volatilidade anualizada ${pct(vol,1)} <span title="Quanto maior, mais arriscado comprar tudo de uma vez">(ⓘ)</span>`;
+    $('#hStats').innerHTML=`Variação no período: <b class="${var_>=0?'up':'dn'}">${pct(var_)}</b> · Mínima R$ ${num(Math.min(...v))} · Máxima R$ ${num(Math.max(...v))} · Média R$ ${num(v.reduce((a,b)=>a+b,0)/v.length)} · Volatilidade anualizada ${pct(vol,1)} <span title="Quanto maior, mais arriscado comprar tudo de uma vez">${ico('info')}</span>`;
   }catch(e){$('#chFx').innerHTML='<p class="note">Histórico indisponível no momento.</p>';$('#hStats').textContent='';}}
 async function loadPtax(){const f=d=>`${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}-${d.getFullYear()}`;
   const hoje=new Date(),ini=new Date(Date.now()-12*864e5);
@@ -248,7 +248,7 @@ function tipFx(c){const q=S.fx[c];const m=MOEDAS.find(x=>x[0]===c);if(!q)return 
   const spread=(q.ask/q.bid-1)*100,amp=(q.high/q.low-1)*100,mil=q.ask*1000;
   const usd=S.fx.USD;const vsUsd=usd?usd.bid/q.bid:null;
   const melhor=Math.min(...INST.filter(i=>i.con!=null).map(i=>i.con)),pior=Math.max(...INST.filter(i=>i.esp!=null).map(i=>i.esp));
-  return sec(`${m[2]} ${m[1]} (${c})`,`<p>1 ${c} custa <b>R$ ${num(q.ask)}</b> no mercado comercial (venda). Quem vende ${c} recebe R$ ${num(q.bid)} (compra).</p>`)+
+  return sec(`${m[1]} (${c})`,`<p>1 ${c} custa <b>R$ ${num(q.ask)}</b> no mercado comercial (venda). Quem vende ${c} recebe R$ ${num(q.bid)} (compra).</p>`)+
    sec('Como ler',`<ul><li><b>Compra x venda:</b> diferença de ${pct(spread,3)} — é o spread do atacado; no varejo ele é bem maior.</li><li><b>Variação do dia:</b> ${q.pct>=0?'subiu':'caiu'} ${pct(Math.abs(q.pct))}; ${q.pct>=0?'o Real perdeu valor frente a ela hoje':'o Real ganhou valor frente a ela hoje'}.</li><li><b>Amplitude do dia:</b> ${pct(amp)} entre mínima e máxima — ${amp>1.5?'dia volátil, cuidado ao comprar tudo de uma vez':'oscilação normal'}.</li></ul>`)+
    sec('Comparativo prático — comprar 1.000 '+c,(()=>{const L=[['Comercial (referência)',0,0],['Conta global (melhor spread '+pct(melhor,1)+')',melhor,3.5],['Papel-moeda em casa de câmbio (~4%)',4,1.1],['Papel-moeda em banco grande ('+pct(pior,1)+')',pior,1.1],['Cartão de crédito comum (~5%)',5,3.5]];
     return '<table><tr><th>Onde</th><th>Sem IOF</th><th>IOF</th><th>Com IOF</th></tr>'+L.map(([n,sp,io])=>{const b=mil*(1+sp/100);return `<tr><td>${n}</td><td class="n">${brl(b)}</td><td class="n">${io?pct(io,1)+' = '+brl(b*io/100):'—'}</td><td class="n"><b>${brl(b*(1+io/100))}</b></td></tr>`;}).join('')+'</table>';})())+
