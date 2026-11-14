@@ -193,7 +193,7 @@ async function loadJuros(){
   const sel=pts('4189'),ipc=pts('13522');
   if(!sel.length&&!ipc.length){$('#chJuros').innerHTML='<p class="note">Banco Central indisponível no momento — tentaremos de novo em 30 min.</p>';$('#indTable').innerHTML='';return;}
   const real=sel.map(([t,v])=>{const i=ipc.find(p=>Math.abs(p[0]-t)<20*864e5);return i?[t,((1+v/100)/(1+i[1]/100)-1)*100]:null;}).filter(Boolean);
-  $('#chJuros').innerHTML=svgChart([{nome:'Selic efetiva',cor:'#0b6bcb',pts:sel},{nome:'IPCA 12m',cor:'#d9480f',pts:ipc},{nome:'Juro real',cor:'#2f9e44',pts:real}]);
+  $('#chJuros').innerHTML=svgChart([{nome:'Selic efetiva',cor:'#1d6fe0',pts:sel},{nome:'IPCA 12m',cor:'#e8590c',pts:ipc},{nome:'Juro real',cor:'#2fb4ff',pts:real}]);
   // atualiza KPIs com dados oficiais, se vierem
   const last=c=>d[c]?.at(-1)?.valor;
   if(last('432')!=null){S.ind.selic=last('432');S.ind.cdi=last('4389')??S.ind.cdi;S.ind.ipca12=last('13522')??S.ind.ipca12;S.ind.data=d['432'].at(-1).data;S.live.ind=true;renderKpis();renderInv();}
@@ -208,7 +208,7 @@ async function loadHist(){const c=$('#cMoeda').value||'USD',n=$('#hDias').value;
     const ini=v[0],fim=v[v.length-1],var_=(fim/ini-1)*100;
     const rets=v.slice(1).map((x,i)=>Math.log(x/v[i]));const m=rets.reduce((a,b)=>a+b,0)/rets.length;
     const vol=Math.sqrt(rets.reduce((a,b)=>a+(b-m)**2,0)/rets.length)*Math.sqrt(252)*100;
-    $('#chFx').innerHTML=svgChart([{nome:c,cor:'#0b6bcb',pts}],{fmt:x=>num(x,x<1?4:2)});
+    $('#chFx').innerHTML=svgChart([{nome:c,cor:'#1d6fe0',pts}],{fmt:x=>num(x,x<1?4:2)});
     $('#hStats').innerHTML=`Variação no período: <b class="${var_>=0?'up':'dn'}">${pct(var_)}</b> · Mínima R$ ${num(Math.min(...v))} · Máxima R$ ${num(Math.max(...v))} · Média R$ ${num(v.reduce((a,b)=>a+b,0)/v.length)} · Volatilidade anualizada ${pct(vol,1)} <span title="Quanto maior, mais arriscado comprar tudo de uma vez">(ⓘ)</span>`;
   }catch(e){$('#chFx').innerHTML='<p class="note">Histórico indisponível no momento.</p>';$('#hStats').textContent='';}}
 async function loadPtax(){const f=d=>`${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}-${d.getFullYear()}`;
