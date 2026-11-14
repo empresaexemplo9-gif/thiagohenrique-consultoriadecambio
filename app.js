@@ -35,8 +35,8 @@ async function loadInd(){
   }catch(e){console.warn('BCB SGS falhou',e);}
   try{
     const ano=new Date().getFullYear();
-    const f=encodeURIComponent(`(Indicador eq 'IPCA' or Indicador eq 'Selic' or Indicador eq 'Câmbio' or Indicador eq 'PIB Total') and baseCalculo eq 0`);
-    const d=await getJSON(`https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata/ExpectativasMercadoAnuais?$top=60&$orderby=Data%20desc&$format=json&$filter=${f}`);
+    const f=encodeURIComponent(`(Indicador eq 'IPCA' or Indicador eq 'Selic' or Indicador eq 'Câmbio' or Indicador eq 'PIB Total' or Indicador eq 'IGP-M') and baseCalculo eq 0`);
+    const d=await getJSON(`https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata/ExpectativasMercadoAnuais?$top=80&$orderby=Data%20desc&$format=json&$filter=${f}`);
     const m={};for(const r of d.value){const k=r.Indicador+'|'+r.DataReferencia;if(!m[k]&&+r.DataReferencia>=ano&&+r.DataReferencia<=ano+2)m[k]=r;}
     S.focus=Object.values(m);
   }catch(e){console.warn('Focus falhou',e);}
@@ -118,10 +118,10 @@ function renderCambio(){
 }
 function renderFocus(){
   if(!S.focus||!S.focus.length){$('#focus').innerHTML='<tr><td>Não foi possível consultar o Focus agora. Veja em <a href="https://www.bcb.gov.br/publicacoes/focus" target="_blank">bcb.gov.br/publicacoes/focus</a>.</td></tr>';return;}
-  const anos=[...new Set(S.focus.map(r=>r.DataReferencia))].sort();const ind=['IPCA','Selic','Câmbio','PIB Total'];
-  const nome={IPCA:'IPCA (%)',Selic:'Selic fim de ano (%)','Câmbio':'Dólar fim de ano (R$)','PIB Total':'PIB (%)'};
+  const anos=[...new Set(S.focus.map(r=>r.DataReferencia))].sort();const ind=['IPCA','IGP-M','Selic','Câmbio','PIB Total'];
+  const nome={'IGP-M':'IGP-M (%)',IPCA:'IPCA (%)',Selic:'Selic fim de ano (%)','Câmbio':'Dólar fim de ano (R$)','PIB Total':'PIB (%)'};
   $('#focus').innerHTML='<tr><th>Indicador</th>'+anos.map(a=>`<th>${a} (mediana)</th><th>mín–máx</th>`).join('')+'</tr>'+ind.map(i=>'<tr data-tip="focus:'+i+'"><td><b>'+nome[i]+'</b></td>'+anos.map(a=>{const r=S.focus.find(x=>x.Indicador===i&&x.DataReferencia===a);return r?`<td class="n">${num(r.Mediana,2)}</td><td class="n">${num(r.Minimo,2)} – ${num(r.Maximo,2)}</td>`:'<td>—</td><td>—</td>';}).join('')+'</tr>').join('');
-  $('#focusSrc').textContent='Fonte: Boletim Focus — BCB, divulgação de '+S.focus[0].Data+' (mediana de ~100 instituições).';
+  $('#focusSrc').textContent='Fonte: Boletim Focus — BCB, divulgação de '+S.focus[0].Data+' (mediana de '+(S.focus[0].numeroRespondentes||'~100')+' instituições).';renderPrev();
 }
 const CONS=[
  ['wallet|Reserva e orçamento',['Reserva de emergência: 6 meses de gastos (12 se autônomo) em Tesouro Selic ou CDB liquidez diária.','Regra 50/30/20: necessidades / desejos / investimentos.','Quite dívidas com juros acima do CDI antes de investir (cartão rotativo passa de 400% a.a.).']],
@@ -158,13 +158,19 @@ async function refreshFx(){if(!(await loadServer()))await loadFx();renderAll();}
 async function refreshAll(){if(!(await loadServer()))await Promise.all([loadFx(),loadInd()]);renderAll();}
 
 // Navegação por hash
-function route(){const h=(location.hash||'#home').slice(1);document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id===h));document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+h));window.scrollTo(0,0);}
+function route(){let h=(location.hash||'#home').slice(1);const SUB={viagens:'viagens',seguros:'seguros',consultoria:'planejamento'};
+  const sub=SUB[h];const view=sub?'consultoria':(document.getElementById(h)?.classList.contains('view')?h:'home');
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id===view));
+  document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+view));
+  if(sub){document.querySelectorAll('.subview').forEach(v=>v.classList.toggle('on',v.id==='sub-'+sub));document.querySelectorAll('#consultoria .subnav a').forEach(a=>a.classList.toggle('on',a.dataset.sub===sub));}
+  window.scrollTo(0,0);}
+document.querySelectorAll('#previsoes .subnav a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();document.querySelectorAll('#previsoes .subnav a').forEach(x=>x.classList.toggle('on',x===a));document.querySelector(a.getAttribute('href')).scrollIntoView({behavior:'smooth',block:'start'});}));
 addEventListener('hashchange',route);
 ['#sVal','#sMes','#sPrazo'].forEach(s=>$(s).addEventListener('input',renderInv));
 ['#cMoeda','#cQtd','#cOp'].forEach(s=>$(s).addEventListener('input',renderCambio));
 ['#dRenda','#dGasto','#dRes','#dDiv'].forEach(s=>$(s).addEventListener('input',renderDiag));
 $('#refresh').addEventListener('click',refreshAll);
-route();renderCons();renderAll();refreshAll();
+route();renderCons();renderAll();refreshAll().then(loadFxVol);
 setInterval(refreshFx,60*1000);setInterval(refreshAll,30*60*1000);
 $('#salvarSim').addEventListener('click',async()=>{const b={amount:+$('#sVal').value,monthly:+$('#sMes').value,months:+$('#sPrazo').value,result:Object.fromEntries(produtos().map(p=>[p.n,Math.round(simula(p,+$('#sVal').value,+$('#sMes').value,+$('#sPrazo').value).liq)]))};
   try{const r=await fetch('/api/simulations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});const d=await r.json();$('#simMsg').textContent=d.ok?'Simulação salva no banco.':'Banco ainda não conectado.';}catch(e){$('#simMsg').textContent='Não foi possível salvar agora.';}});
@@ -269,7 +275,7 @@ function tipInst(nome){const i=INST.find(x=>x.n===nome);if(!i)return '';
   return sec(i.n,`<p>${i.tipo}. Segurança: <b>${i.seg}</b>. Reputação: <b>${i.rep}</b>.</p>`)+
    sec(`Decomposição do custo de ${num(q,0)} ${c}`,`<table><tr><td>Valor no câmbio comercial</td><td class="n">${brl(base)}</td></tr><tr><td>Spread da instituição (${pct(sp,1)})</td><td class="n">${brl(sprd)}</td></tr><tr><td>Tarifas</td><td class="n">${brl(i.tarifa)}</td></tr><tr><td><b>Total sem IOF</b></td><td class="n"><b>${brl(semIof)}</b> (R$ ${num(semIof/q)}/${c})</td></tr><tr><td>IOF (${pct(IOF[op],1)})</td><td class="n">${brl(iof)}</td></tr><tr><td><b>Total com IOF</b></td><td class="n"><b>${brl(tot)}</b> (R$ ${num(tot/q)}/${c})</td></tr></table><p>Acima do comercial: ${pct((semIof/base-1)*100)} sem IOF · ${pct((tot/base-1)*100)} com IOF. O IOF é imposto federal igual em todas as instituições — a diferença entre elas está no spread e nas tarifas.</p>`)+
    sec('Comparativo',`<ul><li>Mais barata: ${outros[0].n} — ${brl(outros[0].s)} sem IOF / ${brl(outros[0].t)} com IOF ${outros[0].n===i.n?'(<b>é esta</b>)':'— aqui você paga '+brl(tot-outros[0].t)+' a mais'}.</li><li>Mais cara: ${outros.at(-1).n} — ${brl(outros.at(-1).s)} sem IOF / ${brl(outros.at(-1).t)} com IOF.</li><li>Economia potencial entre a pior e a melhor: ${brl(outros.at(-1).s-outros[0].s)} sem IOF / ${brl(outros.at(-1).t-outros[0].t)} com IOF.</li></ul><p class="note">Spreads são referências típicas; confirme no app/loja antes de fechar.</p>`);}
-const FOCUS_TXT={IPCA:['Inflação oficial esperada para o ano.','ipca12','Acima de 4,5% (teto da meta) o BC tende a manter juros altos.'],Selic:['Taxa básica esperada no fim do ano.','selic','Selic caindo = renda fixa pós-fixada rende menos; prefixados e ações tendem a se valorizar.'],'Câmbio':['Dólar esperado no fim do ano.',null,'Se a mediana está acima da cotação atual, o mercado espera Real mais fraco.'],'PIB Total':['Crescimento da economia esperado.',null,'PIB forte favorece lucros das empresas e a bolsa.']};
+const FOCUS_TXT={'IGP-M':['Inflação de atacado/aluguéis esperada para o ano.',null,'Reajusta a maioria dos contratos de aluguel; IGP-M acima do IPCA = aluguel subindo mais que a inflação ao consumidor.'],IPCA:['Inflação oficial esperada para o ano.','ipca12','Acima de 4,5% (teto da meta) o BC tende a manter juros altos.'],Selic:['Taxa básica esperada no fim do ano.','selic','Selic caindo = renda fixa pós-fixada rende menos; prefixados e ações tendem a se valorizar.'],'Câmbio':['Dólar esperado no fim do ano.',null,'Se a mediana está acima da cotação atual, o mercado espera Real mais fraco.'],'PIB Total':['Crescimento da economia esperado.',null,'PIB forte favorece lucros das empresas e a bolsa.']};
 function tipFocus(i){const t=FOCUS_TXT[i];if(!t)return '';const rs=(S.focus||[]).filter(r=>r.Indicador===i).sort((a,b)=>a.DataReferencia-b.DataReferencia);
   const atual=i==='Câmbio'?S.fx.USD?.bid:t[1]?S.ind[t[1]]:null;
   return sec(i,`<p>${t[0]}</p>`)+(rs.length?sec('Projeções x hoje',`<table><tr><th>Ano</th><th>Mediana</th><th>Faixa (mín–máx)</th>${atual!=null?'<th>vs. hoje</th>':''}</tr>${rs.map(r=>`<tr><td>${r.DataReferencia}</td><td class="n">${num(r.Mediana,2)}</td><td class="n">${num(r.Minimo,2)}–${num(r.Maximo,2)}</td>${atual!=null?`<td class="n">${r.Mediana>=atual?'▲':'▼'} ${num(r.Mediana-atual,2)}</td>`:''}</tr>`).join('')}</table>${atual!=null?`<p>Valor atual: <b>${num(atual,2)}</b>.</p>`:''}`):'')+sec('O que significa',`<p>${t[2]}</p><p class="note">Faixa larga entre mínimo e máximo = mais incerteza entre os analistas.</p>`);}
@@ -279,7 +285,7 @@ function tipGeneric(tr){const tb=tr.closest('table');const hs=[...tb.querySelect
   return sec(cs[0].textContent,`<p class="note">${tit}</p><table>${cs.map((c,k)=>hs[k]&&k?`<tr><td>${hs[k]}</td><td>${c.innerHTML}</td></tr>`:'').join('')}</table>`)+(src?`<p class="note">${src}</p>`:'');}
 function tipFor(tr){const k=tr.dataset.tip||'';const [t,...r]=k.split(':');const v=r.join(':');
   const val=+$('#sVal').value||0,mes=+$('#sMes').value||0,pr=Math.max(1,+$('#sPrazo').value||1);
-  return (t==='fx'&&tipFx(v))||(t==='inv'&&tipInv(v,pr,val,mes))||(t==='inv12'&&tipInv(v,12,10000,0))||(t==='inst'&&tipInst(v))||(t==='focus'&&tipFocus(v))||(t==='ind'&&tipInd(v))||(t==='cripto'&&tipCripto(v))||(t==='seg'&&typeof tipSeg==='function'&&tipSeg(v))||(t==='atr'&&typeof tipAtr==='function'&&tipAtr(v))||(t==='segins'&&typeof tipSegIns==='function'&&tipSegIns(v))||tipGeneric(tr);}
+  return (t==='fx'&&tipFx(v))||(t==='inv'&&tipInv(v,pr,val,mes))||(t==='inv12'&&tipInv(v,12,10000,0))||(t==='inst'&&tipInst(v))||(t==='focus'&&tipFocus(v))||(t==='ind'&&tipInd(v))||(t==='cripto'&&tipCripto(v))||(t==='seg'&&typeof tipSeg==='function'&&tipSeg(v))||(t==='prevfx'&&tipPrevFx(v))||(t==='atr'&&typeof tipAtr==='function'&&tipAtr(v))||(t==='forn'&&typeof tipForn==='function'&&tipForn(v))||(t==='segins'&&typeof tipSegIns==='function'&&tipSegIns(v))||tipGeneric(tr);}
 let tipTimer=null,tipRow=null,mx=0,my=0;
 function hideTip(){clearTimeout(tipTimer);tipBox.classList.remove('on');tipRow?.classList.remove('tipping');tipRow=null;}
 function placeTip(){const w=tipBox.offsetWidth,h=tipBox.offsetHeight,W=innerWidth,H=innerHeight;
@@ -287,7 +293,7 @@ function placeTip(){const w=tipBox.offsetWidth,h=tipBox.offsetHeight,W=innerWidt
 function arm(tr){clearTimeout(tipTimer);tipRow?.classList.remove('tipping');tipRow=tr;tr.classList.add('tipping');
   tipTimer=setTimeout(()=>{const h=tipFor(tr);if(!h)return;tipBox.innerHTML=h+'<p class="note tipclose">Mova o cursor para fechar.</p>';tipBox.classList.add('on');placeTip();},TIP_MS);}
 document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;if(tipBox.contains(e.target))return;
-  const tr=e.target.closest('main table tr');const valid=tr&&tr.querySelector('td')&&!tr.closest('#tip');
+  const tr=e.target.closest('main table tr');const valid=tr&&tr.querySelector('td')&&!tr.closest('#tip')&&!tr.closest('.detail')&&!tr.classList.contains('sel')&&!tr.classList.contains('detail');
   if(tipBox.classList.contains('on')){if(Math.hypot(e.movementX,e.movementY)>2)hideTip();else return;}
   if(!valid){if(tipRow)hideTip();return;}
   arm(tr);}); // qualquer movimento reinicia a contagem: só abre com o cursor parado 4 s
@@ -311,3 +317,56 @@ function tipCripto(sym){const c=(S.cripto||[]).find(x=>x.sym===sym);if(!c)return
    sec('Desempenho x renda fixa',`<table><tr><th>Período</th><th>${c.sym}</th><th>CDI no período</th></tr>${[['24h',c.ch24,cdi/365],['7 dias',c.ch7,cdi*7/365],['30 dias',c.ch30,cdi30],['1 ano',c.ch1y,cdi]].map(([p,a,b])=>a==null?'':`<tr><td>${p}</td><td class="n">${chg(a)}</td><td class="n">${pct(b,2)}</td></tr>`).join('')}</table>`)+
    sec('Risco',`<ul>${vol?`<li>Volatilidade anualizada (7d): <b>${pct(vol,0)}</b> — o CDI tem ~0%.</li>`:''}${c.athPct!=null?`<li>Está ${pct(Math.abs(c.athPct),1)} abaixo do topo histórico (${brl(c.ath)} em ${new Date(c.athDate).toLocaleDateString('pt-BR')}).</li>`:''}<li>R$ 1.000 aplicados há 1 ano valeriam ${c.ch1y!=null?brl(1000*(1+c.ch1y/100)):'—'} (CDI: ${brl(1000*(1+cdi*0.85/100))} líquido).</li><li>Sem FGC; risco de custódia — prefira corretoras reguladas e carteira própria para valores altos.</li></ul>`)+
    (c.vol&&c.mcap?`<p class="note">Giro diário: ${pct(c.vol/c.mcap*100,1)} da capitalização (liquidez ${c.vol/c.mcap>0.05?'alta':'moderada'}).</p>`:'');}
+
+
+// ---------- Previsões derivadas (Mercado, Câmbio, Consultoria) ----------
+const fv=(ind,ano)=>S.focus?.find(r=>r.Indicador===ind&&+r.DataReferencia===ano)?.Mediana;
+async function loadFxVol(){if(location.protocol==='file:')return;try{S.fxvol=await getJSON('/api/fxvol');renderPrev();}catch(e){}}
+function renderPrev(){if(!S.focus)return;const Y=new Date().getFullYear(),i=S.ind;
+  const selFim=fv('Selic',Y+1)??i.selic,selMed=(i.selic+selFim)/2,ipcaP=fv('IPCA',Y+1)??i.ipca12,igpmP=fv('IGP-M',Y+1),usdY=fv('Câmbio',Y),usdY1=fv('Câmbio',Y+1);
+  const cdiP=selMed-0.1,liq=r=>r*(1-0.175),real=r=>((1+r/100)/(1+ipcaP/100)-1)*100;
+  const P=[['CDB 100% CDI',liq(cdiP),'Pós-fixado acompanha a queda/alta da Selic.',1],['Tesouro Selic',liq(selMed-0.2),'Menor risco; rende menos se a Selic cair.',1],['LCI/LCA 92% CDI (isenta)',cdiP*0.92,'Isenção de IR compensa taxa menor.',2],
+   ['Tesouro IPCA+ 7%',liq(((1+ipcaP/100)*1.07-1)*100),'Garante ganho real; protege se a inflação surpreender.',2],['Prefixado (taxa atual ~'+pct(Math.max(i.selic-1,8),1)+')',liq(Math.max(i.selic-1,8)),'Ganha dos pós-fixados se a Selic cair mais que o esperado.',2],
+   ['Poupança',(Math.pow(1.005,12)-1)*100+(i.tr||0),'Isenta, mas perde para quase tudo.',1]].sort((a,b)=>b[1]-a[1]);
+  $('#prevInv').innerHTML='<tr><th>Produto</th><th>Retorno líquido projetado (12m)</th><th>Acima da inflação projetada</th><th>R$ 10.000 viram</th><th>Leitura</th></tr>'+P.map(([n,r,t,rk],k)=>`<tr class="${k===0?'best':''}"><td><b>${n}</b></td><td class="n">${pct(r)}</td><td class="n ${real(r)>=0?'up':'dn'}">${pct(real(r))}</td><td class="n">${brl(10000*(1+r/100))}</td><td class="note">${t}</td></tr>`).join('')+
+   `<tr><td colspan="5" class="note">Cenário Focus: Selic de ${pct(i.selic)} hoje para ${pct(selFim)} no fim de ${Y+1} (média ${pct(selMed)}); IPCA ${Y+1}: ${pct(ipcaP)}.</td></tr>`;
+  // Câmbio
+  const usd=S.fx.USD?.ask;const V=S.fxvol||{};
+  const rows=['USD','EUR','GBP','JPY','CHF','CAD','AUD','CNY','ARS'].map(c=>{const q=S.fx[c];if(!q||!usd)return null;const cross=q.ask/usd;
+    const p0=usdY?usdY*cross:null,p1=usdY1?usdY1*cross:null,v=V[c]?.vol;const lo=p1&&v?p1*Math.exp(-v):null,hi=p1&&v?p1*Math.exp(v):null;
+    const dir=p1?(p1/q.ask-1)*100:null;return {c,q,p0,p1,v,lo,hi,dir,ch:V[c]?.chg1y};}).filter(Boolean);
+  S.prevFx=rows;
+  $('#prevFx').innerHTML=`<tr><th>Moeda</th><th>Hoje</th><th>Fim de ${Y}</th><th>Fim de ${Y+1}</th><th>Variação esperada</th><th>Faixa provável ${Y+1}</th><th>Volatilidade 12m</th><th>Estratégia</th></tr>`+rows.map(r=>{const d=4;
+    return `<tr data-tip="prevfx:${r.c}"><td><span class="cc">${r.c}</span></td><td class="n">R$ ${num(r.q.ask,d)}</td><td class="n">${r.p0?'R$ '+num(r.p0,d):'—'}</td><td class="n">${r.p1?'R$ '+num(r.p1,d):'—'}</td><td class="n ${r.dir>0?'dn':'up'}">${r.dir!=null?(r.dir>0?'▲ ':'▼ ')+pct(Math.abs(r.dir),1):'—'}</td><td class="n">${r.lo?'R$ '+num(r.lo,d)+' – '+num(r.hi,d):'—'}</td><td class="n">${r.v?pct(r.v*100,1):'—'}</td><td class="note">${r.dir==null?'':r.dir>2?'Tendência de alta: antecipe compras em parcelas.':r.dir<-2?'Tendência de queda: compre aos poucos, sem pressa.':'Estável: compra parcelada (preço médio).'}</td></tr>`;}).join('');
+  // Consultoria
+  const C=[['Custo de vida (R$ 10.000/mês hoje)',`${brl(10000*(1+ipcaP/100))}/mês`,`IPCA projetado ${pct(ipcaP)}`,'Reajuste seu orçamento e metas pela inflação projetada.'],
+   igpmP!=null?['Aluguel de R$ 3.000 (reajuste IGP-M)',`${brl(3000*(1+igpmP/100))}/mês`,`IGP-M projetado ${pct(igpmP)}`,igpmP>ipcaP?'IGP-M acima do IPCA: negocie troca do índice.':'IGP-M abaixo do IPCA: mantenha o índice.']:null,
+   ['Financiamento imobiliário (taxa ~ Selic − 2 p.p.)',`${pct(Math.max(selFim-2,7))} a.a. no fim de ${Y+1}`,`Selic ${pct(i.selic)} → ${pct(selFim)}`,selFim<i.selic?'Juros devem cair: se puder esperar, financiamento fica mais barato; ou contrate e faça portabilidade depois.':'Juros estáveis/altos: priorize entrada maior.'],
+   usdY1?['Viagem de US$ 5.000 (conta global, com IOF)',`${brl(5000*usdY1*1.015*1.035)}`,`hoje: ${usd?brl(5000*usd*1.015*1.035):'—'}`,usd&&usdY1>usd?'Dólar projetado mais alto: compre parte agora.':'Dólar projetado estável/menor: compre aos poucos até a viagem.']:null,
+   ['Seguros (reajuste anual típico ≈ IPCA)',`+${pct(ipcaP)}`,'renovação','Use a renovação para recotar em 3 seguradoras.'],
+   ['Reserva de emergência de R$ 30.000 em 100% CDI',`${brl(30000*(1+liq(cdiP)/100))}`,`ganho real ${pct(real(liq(cdiP)))}`,'Mantenha em liquidez diária; o ganho real segue positivo.']].filter(Boolean);
+  $('#prevCons').innerHTML='<tr><th>Situação</th><th>Projeção 12 meses</th><th>Base</th><th>Recomendação</th></tr>'+C.map(r=>`<tr><td><b>${r[0]}</b></td><td class="n">${r[1]}</td><td class="note">${r[2]}</td><td class="note">${r[3]}</td></tr>`).join('');}
+function tipPrevFx(c){const r=(S.prevFx||[]).find(x=>x.c===c);if(!r)return '';const Y=new Date().getFullYear();
+  return sec(`${c} — cenário ${Y+1}`,`<table><tr><td>Hoje</td><td class="n">R$ ${num(r.q.ask)}</td></tr><tr><td>Projeção fim de ${Y+1}</td><td class="n">${r.p1?'R$ '+num(r.p1):'—'}</td></tr><tr><td>Faixa provável (≈68%)</td><td class="n">${r.lo?'R$ '+num(r.lo)+' – '+num(r.hi):'—'}</td></tr><tr><td>Variação últimos 12 meses</td><td class="n">${r.ch!=null?pct(r.ch*100,1):'—'}</td></tr></table>`)+
+   sec('1.000 '+c+' em cada cenário (conta global, com IOF)',`<table><tr><th>Cenário</th><th>Custo</th></tr>${[['Hoje',r.q.ask],['Projeção',r.p1],['Otimista',r.lo],['Pessimista',r.hi]].map(([n,v])=>v?`<tr><td>${n}</td><td class="n">${brl(1000*v*1.015*1.035)}</td></tr>`:'').join('')}</table>`)+
+   sec('Como usar',`<p>Para compromissos com data marcada (viagem, importação), divida a compra em 3–6 parcelas até a data: reduz o risco de comprar tudo no pico da faixa.</p>`);}
+
+// ---------- Linhas selecionáveis: detalhes dentro da própria tabela ----------
+const openRows=new Set();
+function rowKey(tr){return (tr.closest('table')?.id||'')+'|'+(tr.dataset.tip||tr.cells[0]?.textContent)}
+function detailHTML(tr){let h=tipFor(tr);const k=tr.dataset.tip||'';const [t,...r]=k.split(':');const v=r.join(':');
+  const extra=(t==='inst'&&cmpInst(v))||(t==='seg'&&typeof cmpSeg==='function'&&cmpSeg(v))||(t==='forn'&&typeof tipForn==='function'&&tipForn(v))||(t==='segins'&&typeof cmpSegIns==='function'&&cmpSegIns(v))||(t==='forn'&&typeof cmpForn==='function'&&cmpForn(v))||(t==='atr'&&typeof cmpAtr==='function'&&cmpAtr(v))||'';
+  return `<div class="detail-grid"><div>${h}</div>${extra?`<div class="cmpbox">${extra}</div>`:''}</div>`;}
+function openDetail(tr){const n=tr.cells.length;const d=document.createElement('tr');d.className='detail';d.innerHTML=`<td colspan="${n}">${detailHTML(tr)}</td>`;tr.after(d);tr.classList.add('sel');}
+function closeDetail(tr){if(tr.nextElementSibling?.classList.contains('detail'))tr.nextElementSibling.remove();tr.classList.remove('sel');}
+document.addEventListener('click',e=>{if(e.target.closest('a,input,select,button,.detail'))return;const tr=e.target.closest('main table tr');if(!tr||!tr.querySelector('td')||tr.classList.contains('detail'))return;
+  hideTip();const k=rowKey(tr);if(tr.classList.contains('sel')){closeDetail(tr);openRows.delete(k);}else{openDetail(tr);openRows.add(k);}});
+// reabre detalhes após atualizações automáticas das tabelas
+new MutationObserver(()=>{if(!openRows.size)return;document.querySelectorAll('main table tr').forEach(tr=>{if(tr.classList.contains('sel')||tr.classList.contains('detail')||!tr.querySelector('td'))return;if(openRows.has(rowKey(tr)))openDetail(tr);});}).observe(document.querySelector('main'),{childList:true,subtree:true});
+// comparativo de concorrentes — câmbio
+function cmpInst(nome){const c=$('#cMoeda').value,q=+$('#cQtd').value||0,op=$('#cOp').value,fx=S.fx[c];if(!fx)return '';const key={especie:'esp',cartao:'car',conta:'con'}[op];
+  const L=INST.filter(x=>x[key]!=null).map(x=>({...x,t:fx.ask*q*(1+x[key]/100)*(1+IOF[op]/100)+x.tarifa}));const me=L.find(x=>x.n===nome);if(!me)return '';
+  const RK={'Ótima':3,'Boa':2,'Regular':1,'—':0},SK={'Muito alta':3,'Alta':2};const sk=x=>SK[x.seg]??(/BCB|FDIC|FCA|Nasdaq/.test(x.seg)?2:1);
+  const best=(f,dir=1)=>L.slice().sort((a,b)=>dir*(f(a)-f(b)))[0];
+  const items=[['Menor custo total',best(x=>x.t),x=>brl(x.t)],['Melhor reputação',best(x=>-RK[x.rep]||0),x=>x.rep],['Maior segurança',best(x=>-sk(x)),x=>x.seg]];
+  return sec('Comparação com concorrentes',`<table><tr><th>Critério</th><th>Líder</th><th>Valor</th><th>${nome}</th></tr>${items.map(([n,b,f])=>`<tr><td>${n}</td><td><b>${b.n}</b></td><td>${f(b)}</td><td>${b.n===nome?ico('ok','ok')+' é o líder':f(me)}</td></tr>`).join('')}</table><p class="note">Posição no ranking de custo: ${L.sort((a,b)=>a.t-b.t).findIndex(x=>x.n===nome)+1}º de ${L.length}.</p>`);}

@@ -138,3 +138,12 @@ function tipSegIns(n){const r=SEGURADORAS.find(x=>x[0]===n);if(!r)return '';cons
 ['#segCat'].forEach(s=>$(s).addEventListener('change',renderSeguros));
 ['#segValor','#segImovel','#segVeiculo','#segBens','#segEmpresa','#segDivida','#segIdade','#segDias','#segAluguel','#segRenda'].forEach(s=>$(s).addEventListener('input',calcSeg));
 renderSeguros();
+
+const REPK={'Ótima':3,'Boa':2,'Regular':1};const PORTEK={'Grande':2,'Médio':1};
+function insOf(nome){const b=nome.split(/[ (/]/)[0];return SEGURADORAS.find(r=>r[0].startsWith(b));}
+function cmpSeg(id){const s=segBy(id);if(!s)return '';const L=s.segs.map(n=>({n,r:insOf(n)}));const com=L.filter(x=>x.r);
+  const melhor=com.slice().sort((a,b)=>(REPK[b.r[3]]||0)-(REPK[a.r[3]]||0)||(PORTEK[b.r[2]]||0)-(PORTEK[a.r[2]]||0));
+  return sec('Seguradoras concorrentes neste ramo',`<table><tr><th>Seguradora</th><th>Porte</th><th>Reputação</th><th>Foco</th></tr>${L.map(x=>`<tr><td><b>${x.n}</b></td><td>${x.r?.[2]||'—'}</td><td>${x.r?`<span class="tag ${x.r[3]==='Regular'?'t2':'t1'}">${x.r[3]}</span>`:'—'}</td><td class="note">${x.r?.[1]||'Especialista no ramo'}</td></tr>`).join('')}</table>`)+
+   (melhor.length?sec('Destaques',`<ul><li><b>Melhor reputação:</b> ${melhor.filter(x=>x.r[3]===melhor[0].r[3]).map(x=>x.n).join(', ')}</li><li><b>Maior solidez (porte):</b> ${com.filter(x=>x.r[2]==='Grande').map(x=>x.n).join(', ')||'—'}</li></ul><p class="note">Preço, cobertura e carência variam por perfil e apólice — compare as condições gerais de cada cotação.</p>`):'');}
+function cmpSegIns(n){const r=SEGURADORAS.find(x=>x[0]===n);if(!r)return '';const melhores=SEGURADORAS.filter(x=>x[0]!==n&&REPK[x[3]]>=REPK[r[3]]&&x[2]==='Grande').slice(0,5);
+  return sec('Comparação com concorrentes',`<p>Reputação: <b>${r[3]}</b> · Porte: <b>${r[2]}</b></p><p>${melhores.length?'Concorrentes de grande porte com reputação igual ou superior: '+melhores.map(x=>x[0]).join(', ')+'.':'É referência em reputação e porte entre as listadas.'}</p>`);}

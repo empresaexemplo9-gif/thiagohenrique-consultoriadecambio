@@ -10,7 +10,7 @@
 <header class="top">
   <div class="brand"><strong>Painel Financeiro</strong><span>Mercado · Câmbio · Consultoria</span></div>
   <nav id="nav">
-    <a href="#home" class="on">Início</a><a href="#investimentos">Investimentos</a><a href="#cambio">Câmbio</a><a href="#previsoes">Previsões</a><a href="#viagens">Viagens & Eventos</a><a href="#seguros">Seguros</a><a href="#consultoria">Consultoria</a>
+    <a href="#home" class="on">Início</a><a href="#investimentos">Investimentos</a><a href="#cambio">Câmbio</a><a href="#previsoes">Previsões</a><a href="#consultoria">Consultoria</a>
   </nav>
   <div class="status"><span id="dot" class="dot"></span><span id="upd">carregando…</span> <button id="refresh">Atualizar</button></div>
 </header>
@@ -83,8 +83,13 @@
 
 <!-- PREVISOES -->
 <section id="previsoes" class="view">
-  <h1>Previsões de mercado</h1>
-  <div class="card"><h2>Boletim Focus — Banco Central (mediana do mercado)</h2><div class="tw"><table id="focus"></table></div><p class="src" id="focusSrc">Fonte: Expectativas de Mercado / Boletim Focus — BCB (consulta pública semanal a ~100 instituições).</p></div>
+  <h1>Previsões — Mercado, Câmbio e Consultoria</h1>
+  <p class="lead">Projeções do consenso de mercado (Boletim Focus/BCB, ~150 instituições) atualizadas toda semana, traduzidas em impacto prático para investimentos, câmbio e decisões de consumo e patrimônio. Clique em qualquer linha para ver o detalhamento.</p>
+  <div class="subnav"><a href="#prev-mercado" class="on">Mercado</a><a href="#prev-cambio">Câmbio</a><a href="#prev-consultoria">Consultoria</a></div>
+  <div class="card" id="prev-mercado"><h2 class="hi"><i data-ico="trend"></i>Mercado — Boletim Focus (mediana)</h2><div class="tw"><table id="focus"></table></div><p class="src" id="focusSrc">Fonte: Expectativas de Mercado / Boletim Focus — BCB.</p>
+    <h2 style="margin-top:18px">Retorno projetado dos investimentos — próximos 12 meses</h2><div class="tw"><table id="prevInv"></table></div><p class="src">Selic média projetada = média entre a Selic atual e a mediana Focus para o fim do próximo ano; inflação = mediana Focus. IR de 1 ano (17,5%).</p></div>
+  <div class="card" id="prev-cambio"><h2 class="hi"><i data-ico="wallet"></i>Câmbio — projeções e faixa provável</h2><div class="tw"><table id="prevFx"></table></div><p class="src" id="prevFxSrc">Dólar: mediana Focus. Demais moedas: projeção do dólar × paridade atual com o dólar (supõe cruzamento estável). Faixa provável (≈68%) = projeção ± 1 desvio-padrão da volatilidade dos últimos 12 meses (BCE/Frankfurter).</p></div>
+  <div class="card" id="prev-consultoria"><h2 class="hi"><i data-ico="doc"></i>Consultoria — impacto no seu bolso</h2><div class="tw"><table id="prevCons"></table></div><p class="src">Derivado das medianas Focus de IPCA, IGP-M, Selic e câmbio. Projeções orientativas, não garantias.</p></div>
   <div class="card"><h2>Onde acompanhar previsões confiáveis</h2><div class="tw"><table>
     <tr><th>Fonte</th><th>O que oferece</th><th>Reputação</th></tr>
     <tr><td><a href="https://www.bcb.gov.br/publicacoes/focus" target="_blank">Boletim Focus (BCB)</a></td><td>Selic, IPCA, PIB, câmbio — consenso semanal</td><td>Oficial, referência nacional</td></tr>
@@ -97,8 +102,26 @@
 </section>
 
 <!-- VIAGENS -->
-<section id="viagens" class="view">
-  <h1>Viagens & Eventos</h1>
+
+<!-- CONSULTORIA -->
+<section id="consultoria" class="view">
+  <h1>Consultoria financeira e patrimonial</h1>
+  <div class="subnav"><a href="#consultoria" data-sub="planejamento">Planejamento</a><a href="#viagens" data-sub="viagens">Viagens & Eventos</a><a href="#seguros" data-sub="seguros">Seguros</a></div>
+  <div id="sub-planejamento" class="subview on">
+  <div class="card"><h2>Diagnóstico rápido</h2>
+    <div class="form">
+      <label>Renda mensal líquida (R$)<input id="dRenda" type="number" value="8000"></label>
+      <label>Gastos mensais (R$)<input id="dGasto" type="number" value="6000"></label>
+      <label>Reserva atual (R$)<input id="dRes" type="number" value="10000"></label>
+      <label>Dívidas (R$)<input id="dDiv" type="number" value="0"></label>
+    </div>
+    <div id="diag" class="diag"></div>
+  </div>
+  <div class="cgrid" id="consult"></div>
+  <p class="src">Conteúdo educativo, não constitui recomendação individual (Res. CVM 20). Para decisões relevantes consulte um profissional certificado (CFP®, CEA, CGA).</p>
+  </div>
+  <div id="sub-viagens" class="subview">
+  <h2 class="subh">Viagens & Eventos</h2>
   <p class="lead">Atrações turísticas, esportivas e culturais com preços oficiais convertidos ao câmbio do momento, montagem de pacote com hospedagem e mobilidade, e comparativo de fornecedores.</p>
   <div class="card"><div class="form">
     <label>Destino<select id="vDest"></select></label>
@@ -117,11 +140,9 @@
     <div class="form"><label>Categoria<select id="vFornCat"><option value="todas">Todas</option><option>Hospedagem</option><option>Pacotes</option><option>Passagens</option><option>Ingressos</option><option>Passeios</option><option>Mobilidade</option></select></label></div>
     <div class="tw"><table id="vForn"></table></div>
     <p class="src">Avaliação da consultoria com base em condições comerciais públicas, situação jurídica e reclamações (Reclame Aqui, Procon, consumidor.gov.br). Clique para ver a nota atual.</p></div>
-</section>
-
-<!-- SEGUROS -->
-<section id="seguros" class="view">
-  <h1>Seguros: comparativo completo</h1>
+  </div>
+  <div id="sub-seguros" class="subview">
+  <h2 class="subh">Seguros: comparativo completo</h2>
   <p class="lead">Todos os ramos com relevância e demanda no mercado brasileiro, com coberturas, custos, carências, exclusões e seguradoras de referência. Pare o cursor 4 s sobre uma linha para a análise completa.</p>
   <div class="card"><h2>Tabela comparativa por tipo de seguro</h2>
     <div class="form"><label>Filtrar por categoria<select id="segCat"><option value="todas">Todas</option><option>Pessoas</option><option>Patrimônio</option><option>Empresas</option></select></label></div>
@@ -152,22 +173,7 @@
     <li><b>Dimensionar:</b> capital/limites adequados — subseguro gera indenização proporcional (rateio).</li>
     <li><b>Cotar 3+ seguradoras</b> via corretor SUSEP e comparar condições gerais, não só preço.</li>
     <li><b>Revisar anualmente</b> e a cada evento de vida (casamento, filhos, imóvel, empresa).</li></ol></div>
-</section>
-
-<!-- CONSULTORIA -->
-<section id="consultoria" class="view">
-  <h1>Consultoria financeira e patrimonial</h1>
-  <div class="card"><h2>Diagnóstico rápido</h2>
-    <div class="form">
-      <label>Renda mensal líquida (R$)<input id="dRenda" type="number" value="8000"></label>
-      <label>Gastos mensais (R$)<input id="dGasto" type="number" value="6000"></label>
-      <label>Reserva atual (R$)<input id="dRes" type="number" value="10000"></label>
-      <label>Dívidas (R$)<input id="dDiv" type="number" value="0"></label>
-    </div>
-    <div id="diag" class="diag"></div>
   </div>
-  <div class="cgrid" id="consult"></div>
-  <p class="src">Conteúdo educativo, não constitui recomendação individual (Res. CVM 20). Para decisões relevantes consulte um profissional certificado (CFP®, CEA, CGA).</p>
 </section>
 </main>
 <footer>Dados: Banco Central do Brasil (SGS, Olinda/Focus), AwesomeAPI, Frankfurter (BCE). Atualização automática. Valores de spreads e reputação são referências de mercado sujeitas a mudança.</footer>

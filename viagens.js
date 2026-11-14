@@ -128,7 +128,7 @@ async function loadEventos(d){const box=$('#vEventos');
   }catch(e){box.innerHTML=saz;}}
 function renderForn(){const cat=$('#vFornCat').value;
   $('#vForn').innerHTML='<tr><th>Categoria</th><th>Fornecedor</th><th>Tipo</th><th>Custos e condições</th><th>Avaliação da consultoria</th><th>Reputação</th></tr>'+FORN.filter(f=>cat==='todas'||f[0]===cat).map(([c,n,t,cu,r,u])=>
-   `<tr><td>${c}</td><td>${u!=='#'?`<a href="${u}" target="_blank" rel="noopener"><b>${n}</b></a>`:`<b>${n}</b>`}</td><td>${t}</td><td>${cu}</td><td><span class="tag ${r==='Ótima'||r==='Boa'?'t1':r==='Regular'?'t2':'t3'}">${r}</span></td><td><a href="https://www.reclameaqui.com.br/busca/?q=${encodeURIComponent(n.split(' ')[0])}" target="_blank" rel="noopener">Reclame Aqui</a></td></tr>`).join('');}
+   `<tr data-tip="forn:${n}"><td>${c}</td><td>${u!=='#'?`<a href="${u}" target="_blank" rel="noopener"><b>${n}</b></a>`:`<b>${n}</b>`}</td><td>${t}</td><td>${cu}</td><td><span class="tag ${r==='Ótima'||r==='Boa'?'t1':r==='Regular'?'t2':'t3'}">${r}</span></td><td><a href="https://www.reclameaqui.com.br/busca/?q=${encodeURIComponent(n.split(' ')[0])}" target="_blank" rel="noopener">Reclame Aqui</a></td></tr>`).join('');}
 function tipAtr(i){const d=destSel(),a=d.atr[+i];if(!a)return '';const nac=d.cc==='BRL';
   const rows=Object.entries(PAG).map(([k,[n,sp,io]])=>{const v=toBRL((a.min+a.max)/2,d.cc);if(v==null)return '';const s=nac?v:v*(1+sp/100);return `<tr><td>${n}</td><td class="n">${brl(s)}</td><td class="n">${brl(nac?s:s*(1+io/100))}</td></tr>`;}).join('');
   return sec(`${a.n}`,`<p>${d.n}, ${d.pais} · ${TIPO[a.t][0]}</p>`)+sec('Preço médio por forma de pagamento',`<table><tr><th>Pagamento</th><th>Sem IOF</th><th>Com IOF</th></tr>${rows}</table>`)+
@@ -137,3 +137,11 @@ function tipAtr(i){const d=destSel(),a=d.atr[+i];if(!a)return '';const nac=d.cc=
 ['#vDias','#vPes','#vHotel'].forEach(s=>$(s).addEventListener('input',calcPacote));
 $('#vFornCat').addEventListener('change',renderForn);
 renderViagens();renderForn();
+
+const FRK={'Ótima':4,'Boa':3,'Regular':2,'Arriscada':1,'Não recomendada':0};
+function tipForn(n){const f=FORN.find(x=>x[1]===n);if(!f)return '';return sec(f[1],`<p>${f[2]} · ${f[0]}</p><p>${f[3]}</p><p>Avaliação: <b>${f[4]}</b></p>`);}
+function cmpForn(n){const f=FORN.find(x=>x[1]===n);if(!f)return '';const L=FORN.filter(x=>x[0]===f[0]).sort((a,b)=>FRK[b[4]]-FRK[a[4]]);
+  return sec(`Concorrentes em ${f[0]}`,`<table><tr><th>Fornecedor</th><th>Condições</th><th>Avaliação</th></tr>${L.map(x=>`<tr class="${x[1]===n?'best':''}"><td><b>${x[1]}</b></td><td class="note">${x[3]}</td><td><span class="tag ${FRK[x[4]]>=3?'t1':FRK[x[4]]===2?'t2':'t3'}">${x[4]}</span></td></tr>`).join('')}</table><p class="note">Recomendação: ${L[0][1]} é a opção mais bem avaliada nesta categoria.</p>`);}
+function cmpAtr(i){const d=destSel(),a=d.atr[+i];if(!a)return '';const pago=d.atr.filter(x=>x.max>0);const mid=x=>(x.min+x.max)/2;
+  const mesmo=d.atr.filter(x=>x.t===a.t);const bar=pago.slice().sort((x,y)=>mid(x)-mid(y))[0];
+  return sec('Comparação no destino',`<ul><li><b>Mais barata em ${d.n}:</b> ${bar.n} (${d.cc} ${num(mid(bar),0)})</li>${mesmo.length>1?`<li><b>Outras de ${TIPO[a.t][0].toLowerCase()}:</b> ${mesmo.filter(x=>x!==a).map(x=>x.n+' ('+d.cc+' '+num(mid(x),0)+')').join('; ')}</li>`:''}<li><b>Canais de compra:</b> ${a.on.map(o=>o.n).join(' · ')} — o primeiro é o oficial/mais seguro.</li></ul>`);}
