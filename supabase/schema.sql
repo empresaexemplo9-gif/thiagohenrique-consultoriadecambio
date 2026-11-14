@@ -16,13 +16,20 @@ alter table public.fx_snapshots enable row level security;
 alter table public.indicator_snapshots enable row level security;
 alter table public.institutions enable row level security;
 alter table public.simulations enable row level security;
+drop policy if exists "leitura publica fx" on public.fx_snapshots;
 create policy "leitura publica fx" on public.fx_snapshots for select using (true);
+drop policy if exists "leitura publica ind" on public.indicator_snapshots;
 create policy "leitura publica ind" on public.indicator_snapshots for select using (true);
+drop policy if exists "leitura publica inst" on public.institutions;
 create policy "leitura publica inst" on public.institutions for select using (true);
 -- Gravações pelo backend com a chave publicável, limitadas por validação
+drop policy if exists "insere fx" on public.fx_snapshots;
 create policy "insere fx" on public.fx_snapshots for insert with check (code ~ '^[A-Z]{3}$' and bid > 0 and ask > 0);
+drop policy if exists "insere ind" on public.indicator_snapshots;
 create policy "insere ind" on public.indicator_snapshots for insert with check (selic between 0 and 100);
+drop policy if exists "insere sim" on public.simulations;
 create policy "insere sim" on public.simulations for insert with check (months between 1 and 600 and amount >= 0);
+drop policy if exists "le sim" on public.simulations;
 create policy "le sim" on public.simulations for select using (true);
 insert into public.institutions (name,kind,spread_cash,spread_card,spread_account,safety,reputation,url) values
  ('Wise','Instituição de pagamento (autorizada BCB)',null,0.9,0.9,'Regulada BCB/FCA','Ótima','https://wise.com/br'),
