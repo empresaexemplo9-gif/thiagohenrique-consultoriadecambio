@@ -25,6 +25,10 @@
     <div class="card"><h2>Principais moedas x Real</h2><div class="tw"><table id="homeFx"></table></div><p class="src">Fonte: AwesomeAPI (agrega cotações comerciais B3/mercado interbancário). Valor comercial — não inclui spread nem IOF.</p></div>
     <div class="card"><h2>Rendimento líquido em 12 meses (R$ 10.000)</h2><div class="tw"><table id="homeInv"></table></div><p class="src">Calculado com Selic/CDI/IPCA vigentes e IR regressivo. Veja detalhes em Investimentos.</p></div>
   </div>
+  <div class="grid2">
+    <div class="card"><h2>Selic x IPCA — últimos 24 meses (% a.a.)</h2><div id="chJuros" class="chart"></div><p class="src">Fonte: BCB SGS 4189 (Selic efetiva anualizada) e 13522 (IPCA 12 meses). A distância entre as linhas é o juro real.</p></div>
+    <div class="card"><h2>Criptoativos</h2><div class="tw"><table id="cripto"></table></div><p class="src">Fonte: AwesomeAPI. Volatilidade muito alta; não há garantia nem FGC. Não ultrapasse 1–5% do patrimônio.</p></div>
+  </div>
   <div class="card"><h2>Como ler este painel</h2>
     <ul class="how">
       <li><b>Selic</b>: taxa básica de juros; guia todos os investimentos de renda fixa.</li>
@@ -68,6 +72,10 @@
     </div>
     <div class="tw"><table id="instTable"></table></div>
     <p class="src">VET = Valor Efetivo Total (cotação + spread + IOF + tarifas). Spreads são <b>faixas típicas observadas</b> e mudam diariamente; confirme no app/loja antes de fechar. IOF vigente: 1,1% espécie; 3,5% cartões e contas globais (Decreto 12.499/2025); remessas variam por finalidade. Reputação: Reclame Aqui e ranking de reclamações do Banco Central.</p>
+  </div>
+  <div class="grid2">
+    <div class="card"><h2>Histórico — <span id="hNome">USD</span> <select id="hDias"><option value="30">30 dias</option><option value="90">90 dias</option><option value="180">180 dias</option><option value="360">1 ano</option></select></h2><div id="chFx" class="chart"></div><div id="hStats" class="note"></div><p class="src">Fonte: AwesomeAPI (fechamentos diários). Use a moeda escolhida no conversor acima.</p></div>
+    <div class="card"><h2>PTAX oficial do dólar (Banco Central)</h2><div class="tw"><table id="ptax"></table></div><p class="src">PTAX = média oficial calculada pelo BCB; referência para contratos, impostos e faturas de cartão. Fonte: BCB Olinda.</p></div>
   </div>
   <div class="card"><h2>Cotações ao vivo</h2><div class="tw"><table id="fxTable"></table></div><p class="src">Fontes: AwesomeAPI (B3/interbancário) · Frankfurter/BCE como contingência · PTAX oficial no site do BCB.</p></div>
 </section>

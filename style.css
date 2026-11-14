@@ -23,3 +23,4 @@ input,select{font:inherit;padding:7px 9px;border:1px solid var(--line);border-ra
 .diag{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}.diag div{padding:10px;border-radius:8px;background:var(--bg);font-size:14px}
 a{color:var(--acc)}footer{text-align:center;color:var(--mut);font-size:12px;padding:20px}
 @media(max-width:600px){.top{padding:10px 16px}h1{font-size:20px}}
+.chart svg{width:100%;height:auto;display:block}.chart{min-height:120px}.chart text{fill:var(--mut);font-size:11px}h2 select{font-size:12px;padding:2px 6px;margin-left:6px}

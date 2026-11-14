@@ -154,3 +154,42 @@ addEventListener('hashchange',route);
 $('#refresh').addEventListener('click',refreshAll);
 route();renderCons();renderAll();refreshAll();
 setInterval(refreshFx,60*1000);setInterval(()=>loadInd().then(renderAll),30*60*1000);
+
+// ---------- Módulo 2: histórico, PTAX, cripto ----------
+function svgChart(series,{fmt=v=>num(v,2)}={}){ // series: [{nome,cor,pts:[[t,v]]}]
+  const all=series.flatMap(s=>s.pts);if(!all.length)return '<p class="note">Sem dados no momento.</p>';
+  const W=600,H=220,L=48,R=10,T=10,B=24;const xs=all.map(p=>p[0]),ys=all.map(p=>p[1]);
+  const x0=Math.min(...xs),x1=Math.max(...xs);let y0=Math.min(...ys),y1=Math.max(...ys);const pad=(y1-y0)*0.1||1;y0-=pad;y1+=pad;
+  const X=t=>L+(t-x0)/(x1-x0||1)*(W-L-R),Y=v=>T+(1-(v-y0)/(y1-y0))*(H-T-B);
+  let g='';for(let i=0;i<=4;i++){const v=y0+(y1-y0)*i/4;g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="currentColor" opacity=".12"/><text x="${L-6}" y="${Y(v)+4}" text-anchor="end">${fmt(v)}</text>`;}
+  const d=t=>new Date(t).toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'2-digit'});
+  g+=`<text x="${L}" y="${H-6}">${d(x0)}</text><text x="${W-R}" y="${H-6}" text-anchor="end">${d(x1)}</text>`;
+  const lines=series.map(s=>`<polyline fill="none" stroke="${s.cor}" stroke-width="2" points="${s.pts.map(p=>X(p[0]).toFixed(1)+','+Y(p[1]).toFixed(1)).join(' ')}"/>`).join('');
+  const leg=series.length>1?'<div class="note">'+series.map(s=>`<span style="color:${s.cor}">━</span> ${s.nome}`).join(' &nbsp; ')+'</div>':'';
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" style="color:var(--ink)">${g}${lines}</svg>${leg}`;
+}
+const br2t=s=>{const [d,m,a]=s.split('/');return +new Date(a,m-1,d);};
+async function loadJuros(){try{
+  const [sel,ipc]=await Promise.all([sgs(4189,24),sgs(13522,24)]);const f=a=>a.map(r=>[br2t(r.data),+r.valor.replace(',','.')]);
+  $('#chJuros').innerHTML=svgChart([{nome:'Selic',cor:'#0b6bcb',pts:f(sel)},{nome:'IPCA 12m',cor:'#d9480f',pts:f(ipc)}]);
+}catch(e){$('#chJuros').innerHTML='<p class="note">BCB indisponível no momento.</p>';}}
+async function loadHist(){const c=$('#cMoeda').value||'USD',n=$('#hDias').value;$('#hNome').textContent=c;
+  try{const d=await getJSON(`https://economia.awesomeapi.com.br/json/daily/${c}-BRL/${n}`);
+    const pts=d.map(r=>[r.timestamp*1000,+r.bid]).reverse();const v=pts.map(p=>p[1]);
+    const ini=v[0],fim=v[v.length-1],var_=(fim/ini-1)*100;
+    const rets=v.slice(1).map((x,i)=>Math.log(x/v[i]));const m=rets.reduce((a,b)=>a+b,0)/rets.length;
+    const vol=Math.sqrt(rets.reduce((a,b)=>a+(b-m)**2,0)/rets.length)*Math.sqrt(252)*100;
+    $('#chFx').innerHTML=svgChart([{nome:c,cor:'#0b6bcb',pts}],{fmt:x=>num(x,x<1?4:2)});
+    $('#hStats').innerHTML=`Variação no período: <b class="${var_>=0?'up':'dn'}">${pct(var_)}</b> · Mínima R$ ${num(Math.min(...v))} · Máxima R$ ${num(Math.max(...v))} · Média R$ ${num(v.reduce((a,b)=>a+b,0)/v.length)} · Volatilidade anualizada ${pct(vol,1)} <span title="Quanto maior, mais arriscado comprar tudo de uma vez">(ⓘ)</span>`;
+  }catch(e){$('#chFx').innerHTML='<p class="note">Histórico indisponível no momento.</p>';$('#hStats').textContent='';}}
+async function loadPtax(){const f=d=>`${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}-${d.getFullYear()}`;
+  const hoje=new Date(),ini=new Date(Date.now()-12*864e5);
+  try{const d=await getJSON(`https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/CotacaoDolarPeriodo(dataInicial=@i,dataFinalCotacao=@f)?@i='${f(ini)}'&@f='${f(hoje)}'&$format=json&$orderby=dataHoraCotacao%20desc`);
+    $('#ptax').innerHTML='<tr><th>Data</th><th>Compra</th><th>Venda</th><th>Spread oficial</th></tr>'+d.value.slice(0,7).map(r=>`<tr><td>${new Date(r.dataHoraCotacao.replace(' ','T')).toLocaleDateString('pt-BR')}</td><td class="n">R$ ${num(r.cotacaoCompra)}</td><td class="n">R$ ${num(r.cotacaoVenda)}</td><td class="n">${pct((r.cotacaoVenda/r.cotacaoCompra-1)*100,3)}</td></tr>`).join('');
+  }catch(e){$('#ptax').innerHTML='<tr><td>PTAX indisponível. Consulte <a href="https://www.bcb.gov.br/estabilidadefinanceira/historicocotacoes" target="_blank">bcb.gov.br</a>.</td></tr>';}}
+async function loadCripto(){try{const d=await getJSON('https://economia.awesomeapi.com.br/json/last/BTC-BRL,ETH-BRL,BTC-USD,ETH-USD');
+  $('#cripto').innerHTML='<tr><th>Ativo</th><th>Preço</th><th>Var. 24h</th><th>Mín – Máx</th></tr>'+Object.values(d).map(q=>`<tr><td><b>${q.code}/${q.codein}</b></td><td class="n">${q.codein==='BRL'?brl(+q.bid):'US$ '+num(+q.bid,2)}</td><td class="n ${+q.pctChange>=0?'up':'dn'}">${pct(+q.pctChange)}</td><td class="n">${num(+q.low,0)} – ${num(+q.high,0)}</td></tr>`).join('');
+}catch(e){$('#cripto').innerHTML='<tr><td>Cotações cripto indisponíveis.</td></tr>';}}
+$('#cMoeda').addEventListener('change',loadHist);$('#hDias').addEventListener('change',loadHist);
+loadJuros();loadHist();loadPtax();loadCripto();
+setInterval(()=>{loadCripto();loadPtax();},5*60*1000);setInterval(loadHist,30*60*1000);
