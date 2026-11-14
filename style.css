@@ -65,3 +65,20 @@ tr.detail>td{background:linear-gradient(180deg,rgba(13,42,87,.04),transparent);p
 .detail-grid h4{margin:10px 0 4px;color:var(--acc);font-size:13px}.detail-grid h4:first-child{margin-top:0;font-size:15px;color:var(--ink)}
 .detail-grid table{font-size:12px}.detail-grid th{background:var(--navy2)}.detail-grid ul{padding-left:18px;margin:4px 0}
 .cmpbox{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--glow);border-radius:10px;padding:12px 14px}
+
+/* ---- Tabelas bem separadas e legíveis ---- */
+main{max-width:1440px;padding:24px 24px 40px}
+.card{margin-bottom:28px;padding:20px 22px}
+.grid2,.cgrid{gap:28px}.grid2>.card,.cgrid>.card{margin-bottom:0}.grid2{margin-bottom:28px}
+.card>h2,.card>div>h2{padding-bottom:10px;margin-bottom:14px;border-bottom:1px solid var(--line)}
+.tw{border:1px solid var(--line);border-radius:10px;overflow-x:auto;margin:6px 0 4px;background:var(--card)}
+.tw+.tw{margin-top:22px}
+table{font-size:13.5px}th{white-space:normal;line-height:1.25;padding:9px 10px;vertical-align:bottom;position:sticky;top:0;z-index:1}
+td{padding:8px 10px}
+tbody tr:nth-child(even):not(.detail):not(.best):not(.sel) td{background:color-mix(in srgb,var(--navy2) 3%,transparent)}
+td.n{font-variant-numeric:tabular-nums}
+.tw table tr:last-child td{border-bottom:none}
+.kpis{gap:16px;margin-bottom:24px}
+.src{margin-top:12px}
+.form{margin-bottom:16px}
+@media(max-width:700px){main{padding:16px}.card{padding:16px}}

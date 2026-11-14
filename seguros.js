@@ -114,8 +114,8 @@ function estimaSeg(s,P){const {idade,dias,aluguel}=P;const valor=P[CAMPO[s.id]]?
   return b.v;}
 function renderSeguros(){
   const cat=$('#segCat').value;const L=SEG.filter(s=>cat==='todas'||s.cat===cat);
-  $('#segTable').innerHTML='<tr><th>Seguro</th><th>Categoria</th><th>O que cobre</th><th>Custo típico</th><th>Carência</th><th>Principais exclusões</th><th>Para quem</th><th>Regulador</th><th>Demanda</th></tr>'+
-    L.map(s=>`<tr data-tip="seg:${s.id}"><td><b>${ico(s.ic)}${s.n}</b></td><td>${s.cat}</td><td>${s.cobre}</td><td>${s.custo}</td><td>${s.carencia}</td><td>${s.exclui}</td><td>${s.quem}</td><td>${s.reg}</td><td><span class="tag ${s.dem.startsWith('Muito')?'t1':s.dem.startsWith('Alta')?'t1':'t2'}">${s.dem}</span></td></tr>`).join('');
+  $('#segTable').innerHTML='<tr><th style="width:15%">Seguro</th><th style="width:24%">O que cobre</th><th style="width:17%">Custo típico</th><th style="width:15%">Carência</th><th style="width:17%">Principais exclusões</th><th>Regulador</th><th>Demanda</th></tr>'+
+    L.map(s=>`<tr data-tip="seg:${s.id}"><td><b>${ico(s.ic)}${s.n}</b><div class="note">${s.cat}</div></td><td>${s.cobre}</td><td>${s.custo}</td><td>${s.carencia}</td><td>${s.exclui}</td><td>${s.reg}</td><td><span class="tag ${s.dem.startsWith('Muito')?'t1':s.dem.startsWith('Alta')?'t1':'t2'}">${s.dem}</span></td></tr>`).join('');
   $('#segCards').innerHTML=L.map(s=>`<div class="card"><h2 class="hi">${ico(s.ic)}${s.n}</h2><p class="note">${s.cobre}</p><ul><li><b>Custo:</b> ${s.custo}</li><li><b>Carência:</b> ${s.carencia}</li><li><b>Atenção:</b> ${s.exclui}</li><li><b>Dica da consultoria:</b> ${s.dica}</li><li><b>Onde cotar:</b> ${s.segs.join(', ')}</li></ul></div>`).join('');
   $('#segIns').innerHTML='<tr><th>Seguradora</th><th>Foco / ramos fortes</th><th>Porte</th><th>Reputação*</th><th>Ramos em que aparece</th><th>Verificar</th></tr>'+
     SEGURADORAS.map(([n,f,p,r,u])=>{const base=n.split(/[ (/]/)[0];const ramos=SEG.filter(s=>s.segs.some(x=>x.startsWith(base))).map(s=>s.ic).join(' ');
@@ -130,7 +130,7 @@ function calcSeg(){const imv=+$('#segImovel').value||0;const p={imovel:imv,condo
     return `<tr data-tip="seg:${s.id}"><td>${ico(s.ic)}${s.n}</td><td class="note">${base}</td><td class="n"><b>${brl(a)}</b></td><td class="n">${brl(a/12)}</td><td class="n">${renda?pct(a/(renda*12)*100,1):'—'}</td></tr>`;}).join('');}
 function tipSeg(id){const s=segBy(id);if(!s)return '';
   return sec(`${ico(s.ic)}${s.n}`,`<p>${s.cobre}</p>`)+sec('Comparativo rápido',`<table><tr><td>Custo típico</td><td>${s.custo}</td></tr><tr><td>Carência</td><td>${s.carencia}</td></tr><tr><td>Regulador</td><td>${s.reg}</td></tr><tr><td>Demanda</td><td>${s.dem}</td></tr></table>`)+
-   sec('Não cobre',`<p>${s.exclui}</p>`)+sec('Recomendação da consultoria',`<p>${s.dica}</p>`)+sec('Seguradoras de referência',`<p>${s.segs.join(' · ')}</p>`)+
+   sec('Para quem',`<p>${s.quem}</p>`)+sec('Não cobre',`<p>${s.exclui}</p>`)+sec('Recomendação da consultoria',`<p>${s.dica}</p>`)+sec('Seguradoras de referência',`<p>${s.segs.join(' · ')}</p>`)+
    `<p class="note">Faixas de mercado para orientação. Cotação real depende do perfil — sempre consulte 3+ seguradoras via corretor registrado na SUSEP.</p>`;}
 function tipSegIns(n){const r=SEGURADORAS.find(x=>x[0]===n);if(!r)return '';const base=n.split(/[ (/]/)[0];const L=SEG.filter(s=>s.segs.some(x=>x.startsWith(base)));
   return sec(n,`<p>${r[1]}. Porte: <b>${r[2]}</b>. Reputação: <b>${r[3]}</b>.</p>`)+sec('Ramos em que é referência',L.length?'<ul>'+L.map(s=>`<li>${ico(s.ic)}${s.n} — ${s.custo}</li>`).join('')+'</ul>':'<p>Especialista em nicho.</p>')+
