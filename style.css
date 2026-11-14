@@ -90,3 +90,6 @@ td.n{font-variant-numeric:tabular-nums}
 #tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,560px),1fr));gap:28px}#tools .card{margin:0}
 .tool .out{margin-top:6px}.verd{margin:12px 0 0;padding:10px 12px;border-radius:8px;background:var(--bg);font-size:13.5px;line-height:1.5}
 #cd{font-variant-numeric:tabular-nums;color:#8fc8ff}
+
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none}
+.brand img{width:46px;height:46px;border-radius:12px;box-shadow:0 0 0 1px rgba(47,180,255,.55),0 0 16px rgba(47,180,255,.45);flex:none}
