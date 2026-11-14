@@ -141,9 +141,19 @@ function renderDiag(){const r=+$('#dRenda').value||0,g=+$('#dGasto').value||0,re
 
 function renderAll(){renderKpis();renderFx();renderInv();renderCambio();renderFocus();renderDiag();
   const ok=S.live.fx&&S.live.ind;$('#dot').className='dot'+(ok?' ok':'');
-  $('#upd').textContent=(ok?'Ao vivo · ':'Parcial/offline · ')+'atualizado '+new Date().toLocaleTimeString('pt-BR');}
-async function refreshFx(){await loadFx();renderAll();}
-async function refreshAll(){await Promise.all([loadFx(),loadInd()]);renderAll();}
+  $('#upd').textContent=(ok?'Ao vivo · ':'Parcial/offline · ')+(S.db?'banco conectado · ':'')+'atualizado '+new Date().toLocaleTimeString('pt-BR');}
+// Backend próprio (/api/market): servidor busca as fontes e entrega tudo de uma vez; se falhar, o navegador busca direto.
+async function loadServer(){
+  if(location.protocol==='file:')return false;
+  try{const d=await getJSON('/api/market');
+    if(d.fx&&Object.keys(d.fx).length){S.fx=d.fx;S.live.fx=true;}
+    if(d.ind){S.ind=d.ind;S.live.ind=true;}
+    if(d.focus)S.focus=d.focus;
+    if(d.institutions&&d.institutions.length){INST.length=0;d.institutions.forEach(r=>INST.push({n:r.name,tipo:r.kind,esp:r.spread_cash,car:r.spread_card,con:r.spread_account,tarifa:+r.fee||0,seg:r.safety,rep:r.reputation,url:r.url}));}
+    S.db=d.db;return S.live.fx&&S.live.ind;
+  }catch(e){return false;}}
+async function refreshFx(){if(!(await loadServer()))await loadFx();renderAll();}
+async function refreshAll(){if(!(await loadServer()))await Promise.all([loadFx(),loadInd()]);renderAll();}
 
 // Navegação por hash
 function route(){const h=(location.hash||'#home').slice(1);document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id===h));document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+h));window.scrollTo(0,0);}
@@ -153,7 +163,9 @@ addEventListener('hashchange',route);
 ['#dRenda','#dGasto','#dRes','#dDiv'].forEach(s=>$(s).addEventListener('input',renderDiag));
 $('#refresh').addEventListener('click',refreshAll);
 route();renderCons();renderAll();refreshAll();
-setInterval(refreshFx,60*1000);setInterval(()=>loadInd().then(renderAll),30*60*1000);
+setInterval(refreshFx,60*1000);setInterval(refreshAll,30*60*1000);
+$('#salvarSim').addEventListener('click',async()=>{const b={amount:+$('#sVal').value,monthly:+$('#sMes').value,months:+$('#sPrazo').value,result:Object.fromEntries(produtos().map(p=>[p.n,Math.round(simula(p,+$('#sVal').value,+$('#sMes').value,+$('#sPrazo').value).liq)]))};
+  try{const r=await fetch('/api/simulations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});const d=await r.json();$('#simMsg').textContent=d.ok?'Simulação salva no banco.':'Banco ainda não conectado.';}catch(e){$('#simMsg').textContent='Não foi possível salvar agora.';}});
 
 // ---------- Módulo 2: histórico, PTAX, cripto ----------
 function svgChart(series,{fmt=v=>num(v,2)}={}){ // series: [{nome,cor,pts:[[t,v]]}]
