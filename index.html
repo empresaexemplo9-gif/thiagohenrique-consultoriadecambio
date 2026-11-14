@@ -12,7 +12,7 @@
   <nav id="nav">
     <a href="#home" class="on">Início</a><a href="#investimentos">Investimentos</a><a href="#cambio">Câmbio</a><a href="#previsoes">Previsões</a><a href="#consultoria">Consultoria</a>
   </nav>
-  <div class="status"><span id="dot" class="dot"></span><span id="upd">carregando…</span> <button id="refresh">Atualizar</button></div>
+  <div class="status"><span id="dot" class="dot"></span><span id="upd">carregando…</span><span id="cd" title="Próxima atualização automática"></span> <button id="refresh">Atualizar</button></div>
 </header>
 
 <main>
@@ -106,7 +106,7 @@
 <!-- CONSULTORIA -->
 <section id="consultoria" class="view">
   <h1>Consultoria financeira e patrimonial</h1>
-  <div class="subnav"><a href="#consultoria" data-sub="planejamento">Planejamento</a><a href="#viagens" data-sub="viagens">Viagens & Eventos</a><a href="#seguros" data-sub="seguros">Seguros</a></div>
+  <div class="subnav"><a href="#consultoria" data-sub="planejamento">Planejamento</a><a href="#ferramentas" data-sub="ferramentas">Ferramentas de análise</a><a href="#viagens" data-sub="viagens">Viagens & Eventos</a><a href="#seguros" data-sub="seguros">Seguros</a></div>
   <div id="sub-planejamento" class="subview on">
   <div class="card"><h2>Diagnóstico rápido</h2>
     <div class="form">
@@ -119,6 +119,11 @@
   </div>
   <div class="cgrid" id="consult"></div>
   <p class="src">Conteúdo educativo, não constitui recomendação individual (Res. CVM 20). Para decisões relevantes consulte um profissional certificado (CFP®, CEA, CGA).</p>
+  </div>
+  <div id="sub-ferramentas" class="subview">
+  <h2 class="subh">Ferramentas de análise</h2>
+  <p class="lead">Simuladores para o atendimento: cada um usa Selic, CDI, inflação e câmbio do momento como premissas e recalcula sozinho quando o mercado atualiza.</p>
+  <div id="tools"></div>
   </div>
   <div id="sub-viagens" class="subview">
   <h2 class="subh">Viagens & Eventos</h2>
@@ -181,5 +186,7 @@
 <script src="app.js"></script>
 <script src="seguros.js"></script>
 <script src="viagens.js"></script>
+<script src="ferramentas.js"></script>
+<script src="organiza.js"></script>
 </body>
 </html>

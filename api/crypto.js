@@ -11,6 +11,6 @@ export default async function handler(req,res){
     const r=await fetch('https://economia.awesomeapi.com.br/json/last/BTC-BRL,ETH-BRL,SOL-BRL,XRP-BRL,LTC-BRL,DOGE-BRL');
     if(r.ok)data=Object.values(await r.json()).map((q,i)=>({sym:q.code,name:q.name.split('/')[0],rank:i+1,price:+q.bid,high:+q.high,low:+q.low,ch24:+q.pctChange,spark:[]}));
   }catch(e){}}
-  res.setHeader('Cache-Control','s-maxage=120, stale-while-revalidate=600');
+  res.setHeader('Cache-Control','s-maxage=60, stale-while-revalidate=300');
   res.status(200).json({src,data:data||[],at:new Date().toISOString()});
 }

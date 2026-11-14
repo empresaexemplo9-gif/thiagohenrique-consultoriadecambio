@@ -99,6 +99,7 @@ function renderViagens(){
     d.atr.map((a,i)=>{const lo=toBRL(a.min,d.cc),hi=toBRL(a.max,d.cc);const fm=(x)=>x==null?'—':brl(x*mult);const fi=x=>x==null?'—':brl(x*mult*(1+iof/100));
       const loc=a.max===0?'Gratuito':(nac?'':d.cc+' ')+(a.min===a.max?num(a.min,0):num(a.min,0)+' – '+num(a.max,0));
       return `<tr data-tip="atr:${i}"><td><input type="checkbox" class="vChk" data-i="${i}" checked></td><td><b>${a.n}</b></td><td>${ico(TIPO[a.t][1])} ${TIPO[a.t][0]}</td><td class="n">${loc}</td><td class="n">${a.max===0?'—':fm(lo)+(a.min!==a.max?' – '+fm(hi):'')}</td><td class="n"><b>${a.max===0?'—':fi(lo)+(a.min!==a.max?' – '+fi(hi):'')}</b></td><td>${a.on.map(o=>`<a href="${o.u}" target="_blank" rel="noopener">${o.n}</a>`).join('<br>')}</td><td class="note">${a.obs}</td></tr>`;}).join('');
+  if(window._vOff&&window._vOff.d===d.id)document.querySelectorAll('.vChk').forEach(c=>{if(window._vOff.off.includes(c.dataset.i))c.checked=false;});
   document.querySelectorAll('.vChk').forEach(c=>c.addEventListener('change',calcPacote));
   calcPacote();loadEventos(d);}
 function calcPacote(){const d=destSel(),nac=d.cc==='BRL';const dias=Math.max(1,+$('#vDias').value||1),pes=Math.max(1,+$('#vPes').value||1),cl=$('#vHotel').value;
@@ -145,3 +146,6 @@ function cmpForn(n){const f=FORN.find(x=>x[1]===n);if(!f)return '';const L=FORN.
 function cmpAtr(i){const d=destSel(),a=d.atr[+i];if(!a)return '';const pago=d.atr.filter(x=>x.max>0);const mid=x=>(x.min+x.max)/2;
   const mesmo=d.atr.filter(x=>x.t===a.t);const bar=pago.slice().sort((x,y)=>mid(x)-mid(y))[0];
   return sec('Comparação no destino',`<ul><li><b>Mais barata em ${d.n}:</b> ${bar.n} (${d.cc} ${num(mid(bar),0)})</li>${mesmo.length>1?`<li><b>Outras de ${TIPO[a.t][0].toLowerCase()}:</b> ${mesmo.filter(x=>x!==a).map(x=>x.n+' ('+d.cc+' '+num(mid(x),0)+')').join('; ')}</li>`:''}<li><b>Canais de compra:</b> ${a.on.map(o=>o.n).join(' · ')} — o primeiro é o oficial/mais seguro.</li></ul>`);}
+
+// Reprocessa preços quando o câmbio atualiza, mantendo as atrações desmarcadas.
+window.onMarket=()=>{window._vOff={d:destSel().id,off:[...document.querySelectorAll('.vChk:not(:checked)')].map(c=>c.dataset.i)};renderViagens();window._vOff=null;if(typeof runTools==='function')runTools();};

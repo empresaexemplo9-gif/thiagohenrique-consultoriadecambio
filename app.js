@@ -143,7 +143,7 @@ function renderDiag(){const r=+$('#dRenda').value||0,g=+$('#dGasto').value||0,re
 
 function renderAll(){renderKpis();renderFx();renderInv();renderCambio();renderFocus();renderDiag();
   const ok=S.live.fx&&S.live.ind;$('#dot').className='dot'+(ok?' ok':'');
-  $('#upd').textContent=(ok?'Ao vivo · ':'Parcial/offline · ')+(S.db?'banco conectado · ':'')+'atualizado '+new Date().toLocaleTimeString('pt-BR');}
+  if(S.focus)renderPrev();window.onMarket?.();$('#upd').textContent=(ok?'Ao vivo · ':'Parcial/offline · ')+(S.db?'banco conectado · ':'')+'atualizado '+new Date().toLocaleTimeString('pt-BR');}
 // Backend próprio (/api/market): servidor busca as fontes e entrega tudo de uma vez; se falhar, o navegador busca direto.
 async function loadServer(){
   if(location.protocol==='file:')return false;
@@ -158,7 +158,7 @@ async function refreshFx(){if(!(await loadServer()))await loadFx();renderAll();}
 async function refreshAll(){if(!(await loadServer()))await Promise.all([loadFx(),loadInd()]);renderAll();}
 
 // Navegação por hash
-function route(){let h=(location.hash||'#home').slice(1);const SUB={viagens:'viagens',seguros:'seguros',consultoria:'planejamento'};
+function route(){let h=(location.hash||'#home').slice(1);const SUB={viagens:'viagens',seguros:'seguros',consultoria:'planejamento',ferramentas:'ferramentas'};
   const sub=SUB[h];const view=sub?'consultoria':(document.getElementById(h)?.classList.contains('view')?h:'home');
   document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id===view));
   document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+view));
@@ -171,7 +171,12 @@ addEventListener('hashchange',route);
 ['#dRenda','#dGasto','#dRes','#dDiv'].forEach(s=>$(s).addEventListener('input',renderDiag));
 $('#refresh').addEventListener('click',refreshAll);
 route();renderCons();renderAll();refreshAll().then(loadFxVol);
-setInterval(refreshFx,60*1000);setInterval(refreshAll,30*60*1000);
+// Atualização contínua: câmbio a cada 30 s (pausa com a aba oculta e atualiza ao voltar), indicadores a cada 30 min.
+const CICLO=30;let prox=CICLO,ocupado=false;
+async function ciclo(){if(ocupado)return;ocupado=true;$('#cd').textContent=' · atualizando…';try{await refreshFx();}finally{ocupado=false;prox=CICLO;}}
+setInterval(()=>{if(document.hidden||ocupado)return;prox--;if(prox<=0)ciclo();else $('#cd').textContent=' · próxima em '+prox+' s';},1000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)ciclo();});
+setInterval(refreshAll,30*60*1000);
 $('#salvarSim').addEventListener('click',async()=>{const b={amount:+$('#sVal').value,monthly:+$('#sMes').value,months:+$('#sPrazo').value,result:Object.fromEntries(produtos().map(p=>[p.n,Math.round(simula(p,+$('#sVal').value,+$('#sMes').value,+$('#sPrazo').value).liq)]))};
   try{const r=await fetch('/api/simulations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});const d=await r.json();$('#simMsg').textContent=d.ok?'Simulação salva no banco.':'Banco ainda não conectado.';}catch(e){$('#simMsg').textContent='Não foi possível salvar agora.';}});
 
@@ -242,7 +247,7 @@ async function loadCripto(){let d=null;
 }
 $('#cMoeda').addEventListener('change',loadHist);$('#hDias').addEventListener('change',loadHist);
 loadJuros();loadHist();loadPtax();loadCripto();
-setInterval(()=>{loadCripto();loadPtax();},5*60*1000);setInterval(loadHist,30*60*1000);
+setInterval(()=>{if(!document.hidden)loadCripto();},60*1000);setInterval(loadPtax,5*60*1000);setInterval(loadHist,30*60*1000);
 
 
 // ---------- Explicação ao parar o cursor 4 s sobre uma linha ----------
