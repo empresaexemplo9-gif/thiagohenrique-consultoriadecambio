@@ -108,7 +108,7 @@
 <!-- CONSULTORIA -->
 <section id="consultoria" class="view">
   <h1>Consultoria financeira e patrimonial</h1>
-  <div class="subnav"><a href="#consultoria" data-sub="planejamento">Planejamento</a><a href="#ferramentas" data-sub="ferramentas">Ferramentas de análise</a><a href="#viagens" data-sub="viagens">Viagens & Eventos</a><a href="#seguros" data-sub="seguros">Seguros</a></div>
+  <div class="subnav"><a href="#consultoria" data-sub="planejamento">Planejamento</a><a href="#ferramentas" data-sub="ferramentas">Ferramentas de análise</a><a href="#viagens" data-sub="viagens">Viagens & Eventos</a><a href="#seguros" data-sub="seguros">Seguros</a><a href="#pacotes" data-sub="pacotes">Pacotes & Questionário</a></div>
   <div id="sub-planejamento" class="subview on">
   <div class="card"><h2>Diagnóstico rápido</h2>
     <div class="form">
@@ -181,6 +181,46 @@
     <li><b>Cotar 3+ seguradoras</b> via corretor SUSEP e comparar condições gerais, não só preço.</li>
     <li><b>Revisar anualmente</b> e a cada evento de vida (casamento, filhos, imóvel, empresa).</li></ol></div>
   </div>
+  <div id="sub-pacotes" class="subview">
+  <h2 class="subh">Pacotes de proteção e planejamento por cliente</h2>
+  <p class="lead">Responda o questionário (ou parta de um perfil pronto) e a consultoria monta três pacotes — Essencial, Recomendado e Completo —, a ordem de prioridade com os motivos e o plano de curto, médio e longo prazo. Prêmios corrigidos pelo IPCA ao vivo; premissas com Selic/CDI do momento.</p>
+  <div class="kpis" id="pacPrem"></div>
+  <div class="card"><h2>Questionário do cliente</h2>
+    <p class="note">Comece por um perfil típico e ajuste com as respostas reais. Cada pergunta mostra por que ela importa.</p>
+    <div class="toc" id="pacPerfis" style="margin-bottom:16px"></div>
+    <div class="form" id="pacQ"></div>
+    <div id="pqObj" style="margin-top:6px"></div></div>
+  <div class="card"><h2>Resumo do diagnóstico</h2><div class="diag" id="pacResumo"></div></div>
+  <h2 style="margin:20px 0 10px">Pacotes sugeridos</h2>
+  <div class="cgrid" id="pacOut"></div>
+  <div class="card" style="margin-top:20px"><h2>O que priorizar — e por quê</h2><div class="tw"><table id="pacPrio"></table></div>
+    <p class="src">Essencial = risco que quebraria as finanças da família; Recomendado = alto custo-benefício; Complementar = conforto/conveniência. Prêmios: faixas de mercado (base jun/2025) × IPCA acumulado — confirme sempre com 3+ cotações via corretor SUSEP.</p></div>
+  <h2 style="margin:20px 0 10px">Planejamento</h2>
+  <div class="cgrid" id="pacPlano"></div>
+  <div class="card" style="margin-top:20px"><h2>Guia de entendimento do cliente — como conduzir</h2>
+    <div class="grid2">
+    <div><h4>1. Antes da reunião</h4><ul>
+      <li>Peça: últimos 3 extratos, holerite/pró-labore, IR do último ano, apólices e planos atuais, contratos de financiamento.</li>
+      <li>Envie o questionário antes — a reunião serve para validar e aprofundar.</li></ul>
+    <h4>2. Na conversa</h4><ul>
+      <li>Comece por <b>objetivos e medos</b>, não por produtos: “O que aconteceria com sua família se você ficasse 6 meses sem renda?”.</li>
+      <li>Perguntas abertas; deixe o cliente falar 70% do tempo. Confirme números com documentos.</li>
+      <li>Mapeie <b>quem depende de quem</b> (filhos, pais idosos, cônjuge) e quem decide em casa — traga o cônjuge.</li>
+      <li>Pergunte sobre saúde (preexistências, fumo) e hobbies de risco: omitir anula a indenização.</li>
+      <li>Investigue o que já tem: seguro de cartão, de empregador, MIP do financiamento — evite duplicidade.</li></ul></div>
+    <div><h4>3. Sinais de alerta</h4><ul>
+      <li>Gastos ≥ renda ou uso de cheque especial/rotativo: primeiro orçamento, depois só o Essencial.</li>
+      <li>Renda única com dependentes e sem seguro de vida: prioridade máxima.</li>
+      <li>Plano de saúde atrelado ao emprego perto da aposentadoria.</li>
+      <li>Cliente quer “o mais barato”: mostre o que deixa de cobrir (franquia, limites, exclusões).</li>
+      <li>Respostas inconsistentes (renda × padrão de vida): aprofunde antes de recomendar.</li></ul>
+    <h4>4. Depois</h4><ul>
+      <li>Apresente os 3 pacotes, recomende um e explique os motivos por escrito.</li>
+      <li>Registre perfil de risco e objetivos (suitability — Res. CVM 30) e a data.</li>
+      <li>Agende revisão anual e a cada evento de vida; recote na renovação (reajuste ≈ IPCA).</li></ul></div>
+    </div></div>
+  <p class="src">Conteúdo educativo para apoio ao atendimento, não constitui recomendação individual. Seguros devem ser contratados via corretor registrado na SUSEP; investimentos com profissional certificado.</p>
+  </div>
 </section>
 </main>
 <footer>Dados: Banco Central do Brasil (SGS, Olinda/Focus), AwesomeAPI, Frankfurter (BCE). Atualização automática. Valores de spreads e reputação são referências de mercado sujeitas a mudança.</footer>
@@ -189,6 +229,7 @@
 <script src="seguros.js"></script>
 <script src="viagens.js"></script>
 <script src="ferramentas.js"></script>
+<script src="pacotes.js"></script>
 <script src="organiza.js"></script>
 </body>
 </html>
