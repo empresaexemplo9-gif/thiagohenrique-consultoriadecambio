@@ -158,7 +158,7 @@ async function refreshFx(){if(!(await loadServer()))await loadFx();renderAll();}
 async function refreshAll(){if(!(await loadServer()))await Promise.all([loadFx(),loadInd()]);renderAll();}
 
 // Navegação por hash
-function route(){let h=(location.hash||'#home').slice(1);const SUB={viagens:'viagens',seguros:'seguros',consultoria:'planejamento',ferramentas:'ferramentas'};
+function route(){let h=(location.hash||'#home').slice(1);const SUB={viagens:'viagens',seguros:'seguros',consultoria:'planejamento',ferramentas:'ferramentas',pacotes:'pacotes'};
   const sub=SUB[h];const view=sub?'consultoria':(document.getElementById(h)?.classList.contains('view')?h:'home');
   document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id===view));
   document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+view));
