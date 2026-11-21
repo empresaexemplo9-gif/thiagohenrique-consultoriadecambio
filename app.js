@@ -30,7 +30,7 @@ const sgs=(c,n=1)=>getJSON(`https://api.bcb.gov.br/dados/serie/bcdata.sgs.${c}/d
 async function loadInd(){
   try{
     const [selic,cdi,ipca,tr]=await Promise.all([sgs(432),sgs(4389),sgs(13522),sgs(226)]);
-    S.ind={selic:+selic[0].valor.replace(',','.'),cdi:+cdi[0].valor.replace(',','.'),ipca12:+ipca[0].valor.replace(',','.'),tr:+tr[0].valor.replace(',','.')*12,data:selic[0].data};
+    S.ind={selic:+selic[0].valor.replace(',','.'),cdi:+cdi[0].valor.replace(',','.'),ipca12:+ipca[0].valor.replace(',','.'),tr:+tr[0].valor.replace(',','.')*12,data:selic[0].data,ipcaData:ipca[0].data};
     S.live.ind=true;
   }catch(e){console.warn('BCB SGS falhou',e);}
   try{
@@ -70,7 +70,7 @@ const riscoTag=r=>`<span class="tag t${r}">${['','Baixo','Médio','Alto'][r]}</s
 
 // ---------- Renderização ----------
 function renderKpis(){const i=S.ind,u=S.fx.USD,e=S.fx.EUR;const lv=S.live.ind?'BCB · '+(i.data||''):'referência (offline)';
-  const k=[['Selic (meta)',pct(i.selic),lv],['CDI anual',pct(i.cdi),lv],['IPCA 12 meses',pct(i.ipca12),lv],['Juro real (Selic − IPCA)',pct(((1+i.selic/100)/(1+i.ipca12/100)-1)*100),'acima da inflação'],
+  const k=[['Selic (meta)',pct(i.selic),lv],['CDI anual',pct(i.cdi),lv],['IPCA 12 meses',pct(i.ipca12),S.live.ind?'BCB · '+(i.ipcaData||'ao vivo'):lv],['Juro real (Selic − IPCA)',pct(((1+i.selic/100)/(1+i.ipca12/100)-1)*100),'acima da inflação'],
     ['Dólar comercial',u?'R$ '+num(u.bid):'—',u?`<span class="${u.pct>=0?'up':'dn'}">${u.pct>=0?'▲':'▼'} ${pct(u.pct)}</span> hoje`:''],['Euro comercial',e?'R$ '+num(e.bid):'—',e?`<span class="${e.pct>=0?'up':'dn'}">${e.pct>=0?'▲':'▼'} ${pct(e.pct)}</span> hoje`:'']];
   $('#kpis').innerHTML=k.map(x=>`<div class="kpi"><div class="l">${x[0]}</div><div class="v">${x[1]}</div><div class="s">${x[2]}</div></div>`).join('');}
 function fxRows(lim){return MOEDAS.slice(0,lim).map(([c,n,f])=>{const q=S.fx[c];if(!q)return `<tr><td><span class="cc">${c}</span></td><td>${n}</td><td colspan="3">indisponível</td></tr>`;
