@@ -51,7 +51,7 @@ function pacPreenche(k){const p=PAC_PERFIS[k];if(!p)return;PAC_Q.forEach(([id])=
 function pacItens(P){const anual=P.renda*12,I=[];const f=pacFator();
   const capital=Math.round((P.dep?Math.max(5,Math.min(10,3+P.dep*2)):2)*anual+P.divida);
   const add=(id,prio,motivo,base)=>{const s=segBy(id);if(!s)return;const est=estimaSeg(s,{idade:P.idade,dias:Math.max(P.viagem,0)*10,aluguel:P.aluguel,valor:base??capital,imovel:base??P.imovel,veiculo:base??P.veic,bens:base??P.bens,empresa:base??P.empresa,divida:base??P.divida})*f*(id==='vida'&&P.fumante==='sim'?1.6:1);
-    I.push({s,prio,motivo,anual:est,base});};
+    I.push({s,prio,motivo,anual:est*(id==='rural'?0.7:1),base,emp:['empresarial','rural','cyber'].includes(id),fut:id==='saude'&&P.saude==='empresa'});};
   const semRenda=['estudante'].includes(P.ocup);
   // Saúde
   if(P.saude==='nao'||P.saude==='sus')add('saude',1,'Sem plano: uma internação privada custa R$ 5–30 mil/dia. É o maior risco financeiro de curto prazo.');
@@ -82,13 +82,13 @@ const PRIO=['','Essencial','Recomendado','Complementar'],PRIOTAG=['','t3','t2','
 function renderPac(){if(!$('#pacOut'))return;const P=pacLe();const {itens,capital}=pacItens(P);const f=pacFator();
   const anual=P.renda*12||1,sobra=P.renda-P.gasto,resIdeal=P.gasto*(['liberal','empresario','rural'].includes(P.ocup)?12:6);
   const pacotes=[['Essencial','Só o que é indispensável: riscos que quebrariam a família.',1],['Recomendado','Essencial + o que tem melhor custo-benefício para o perfil.',2],['Completo','Todos os seguros aplicáveis ao perfil.',3]]
-    .map(([n,d,lim])=>{const L=itens.filter(x=>x.prio<=lim);const t=L.reduce((a,x)=>a+x.anual,0);return {n,d,L,t};});
+    .map(([n,d,lim])=>{const L=itens.filter(x=>x.prio<=lim);const t=L.filter(x=>!x.emp&&!x.fut).reduce((a,x)=>a+x.anual,0),te=L.filter(x=>x.emp).reduce((a,x)=>a+x.anual,0);return {n,d,L,t,te};});
   const i=S.ind,real=((1+i.selic/100)/(1+i.ipca12/100)-1)*100;
-  $('#pacPrem').innerHTML=[['IPCA 12m (correção de prêmios)',pct(i.ipca12),S.live.ind?'BCB · '+(i.data||'ao vivo'):'referência (offline)'],['Fator sobre preços de jun/2025','×'+num(f,3),'atualizado automaticamente'],['Selic / CDI',pct(i.selic)+' / '+pct(i.cdi),'premissa do planejamento'],['Juro real',pct(real),real>5?'favorece renda fixa':'avaliar diversificação']]
+  $('#pacPrem').innerHTML=[['IPCA 12m (correção de prêmios)',pct(i.ipca12),S.live.ind?'BCB · IPCA de '+(i.ipcaData||'último mês'):'referência (offline)'],['Fator sobre preços de jun/2025','×'+num(f,3),'atualizado automaticamente'],['Selic / CDI',pct(i.selic)+' / '+pct(i.cdi),'premissa do planejamento'],['Juro real',pct(real),real>5?'favorece renda fixa':'avaliar diversificação']]
     .map(x=>`<div class="kpi"><div class="l">${x[0]}</div><div class="v">${x[1]}</div><div class="s">${x[2]}</div></div>`).join('');
   $('#pacOut').innerHTML=pacotes.map((p,k)=>`<div class="card"><h2>${['🛡️','⭐','🏆'][k]} Pacote ${p.n}</h2><p class="note">${p.d}</p>
-    <div class="tw"><table><tr><th>Seguro</th><th>Prioridade</th><th>Anual</th><th>Mensal</th></tr>${p.L.map(x=>`<tr${x.s.cobre?` data-tip="seg:${x.s.id}"`:''}><td>${ico(x.s.ic)}${x.s.n}</td><td><span class="tag ${PRIOTAG[x.prio]}">${PRIO[x.prio]}</span></td><td class="n">${brl(x.anual)}</td><td class="n">${brl(x.anual/12)}</td></tr>`).join('')||'<tr><td colspan="4" class="note">Nenhum item nesta faixa.</td></tr>'}
-    <tr class="best"><td><b>Total</b></td><td></td><td class="n"><b>${brl(p.t)}</b></td><td class="n"><b>${brl(p.t/12)}</b></td></tr></table></div>
+    <div class="tw"><table><tr><th>Seguro</th><th>Prioridade</th><th>Anual</th><th>Mensal</th></tr>${p.L.map(x=>`<tr${x.s.cobre?` data-tip="seg:${x.s.id}"`:''}><td>${ico(x.s.ic)}${x.s.n}</td><td><span class="tag ${PRIOTAG[x.prio]}">${PRIO[x.prio]}</span></td><td class="n">${brl(x.anual)}${x.emp?'<div class="note">pago pela empresa</div>':x.fut?'<div class="note">se perder o plano</div>':''}</td><td class="n">${brl(x.anual/12)}</td></tr>`).join('')||'<tr><td colspan="4" class="note">Nenhum seguro indispensável para este perfil — a prioridade é a reserva de emergência.</td></tr>'}
+    <tr class="best"><td><b>Total da família</b></td><td></td><td class="n"><b>${brl(p.t)}</b></td><td class="n"><b>${brl(p.t/12)}</b></td></tr>${p.te?`<tr><td><b>Custo da empresa</b></td><td></td><td class="n">${brl(p.te)}</td><td class="n">${brl(p.te/12)}</td></tr>`:''}</table></div>
     <p class="note">${pct(p.t/anual*100,1)} da renda anual — ${p.t/anual>0.10?'<span class="dn">acima da faixa de 5–10%: priorize o Essencial e revise franquias.</span>':p.t/anual>=0.05?'dentro da faixa saudável (5–10%).':'abaixo de 5%: cabe no orçamento.'}</p></div>`).join('');
   $('#pacPrio').innerHTML='<tr><th>#</th><th>Seguro</th><th>Nível</th><th>Por que (motivo para o cliente)</th><th>Estimativa anual</th></tr>'+
     [{s:{n:'Reserva de emergência',ic:'wallet'},prio:P.reserva<resIdeal?1:3,motivo:P.reserva<resIdeal?`Tem ${brl(P.reserva)} de ${brl(resIdeal)} ideais. Vem antes de qualquer seguro: paga franquias, carências e imprevistos pequenos.`:'Reserva completa — mantenha em Tesouro Selic/CDB liquidez diária.',anual:null},...itens]
